@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>口己 - 个人日常记录</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6366f1">
+</head>
+<body>
+  <div id="app">
+    <div id="main-content"></div>
+    <nav id="bottom-nav">
+      <button class="nav-btn active" data-tab="record">
+        <span class="nav-icon">📝</span>
+        <span class="nav-label">记录</span>
+      </button>
+      <button class="nav-btn" data-tab="analysis">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">分析</span>
+      </button>
+      <button class="nav-btn" data-tab="data">
+        <span class="nav-icon">📅</span>
+        <span class="nav-label">数据</span>
+      </button>
+      <button class="nav-btn" data-tab="settings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">设置</span>
+      </button>
+    </nav>
+  </div>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(registration => {
+            console.log('Service Worker registered with scope:', registration.scope);
+          })
+          .catch(error => {
+            console.log('Service Worker registration failed:', error);
+          });
+      });
+    }
+  </script>
+</body>
+</html>

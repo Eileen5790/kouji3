@@ -1,0 +1,1267 @@
+/* 全局样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* 主题变量 */
+:root {
+  --primary-color: #6366f1;
+  --primary-dark: #4f46e5;
+  --primary-light: #818cf8;
+  --background-color: #f5f5f5;
+  --card-background: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --border-color: #e0e0e0;
+  --danger-color: #ef4444;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --info-color: #06b6d4;
+  --corner-radius: 12px;
+  --corner-radius-sm: 8px;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-button: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-nav: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  --font-size-base: 16px;
+  --font-size-sm: 14px;
+  --font-size-lg: 18px;
+  --spacing-base: 16px;
+  --spacing-sm: 12px;
+  --spacing-lg: 20px;
+  --spacing-xl: 24px;
+  --transition: all 0.2s ease;
+}
+
+/* 深色主题 */
+body.dark-theme {
+  --background-color: #121212;
+  --card-background: #1e1e1e;
+  --text-primary: #ffffff;
+  --text-secondary: #aaaaaa;
+  --border-color: #333333;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-button: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-nav: 0 -2px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* 应用容器 */
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background-color);
+  transition: var(--transition);
+}
+
+/* 主内容区域 */
+#main-content {
+  flex: 1;
+  padding: var(--spacing-base);
+  padding-bottom: 80px; /* 为底部导航留出空间 */
+  transition: var(--transition);
+}
+
+/* 卡片样式 */
+.card {
+  background-color: var(--card-background);
+  border-radius: var(--corner-radius);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-base);
+  margin-bottom: var(--spacing-base);
+  transition: var(--transition);
+}
+
+/* 标题样式 */
+h1, h2, h3, h4 {
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+h3 {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+h4 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* 表单元素 */
+.form-group {
+  margin-bottom: var(--spacing-base);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.form-input {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--corner-radius-sm);
+  background-color: var(--card-background);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  transition: var(--transition);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.form-input::placeholder {
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+/* 按钮样式 */
+.btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: none;
+  border-radius: var(--corner-radius);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-button);
+}
+
+.btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #dc2626;
+}
+
+.btn-secondary {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background-color: #d4d4d4;
+}
+
+body.dark-theme .btn-secondary:hover {
+  background-color: #444;
+}
+
+/* 底部导航 */
+#bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background-color: var(--card-background);
+  box-shadow: var(--shadow-nav);
+  padding: var(--spacing-sm) 0;
+  z-index: 100;
+  transition: var(--transition);
+}
+
+.nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  color: var(--text-secondary);
+  transition: var(--transition);
+  min-width: 80px;
+}
+
+.nav-btn:hover {
+  color: var(--primary-color);
+}
+
+.nav-btn.active {
+  color: var(--primary-color);
+}
+
+.nav-icon {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.nav-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* 标签样式 */
+.tag {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: var(--font-size-sm);
+  margin: 4px;
+  background-color: var(--border-color);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.tag:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.tag.selected {
+  background-color: rgba(99, 102, 241, 0.2);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+/* 列表样式 */
+.list {
+  list-style: none;
+}
+
+.list-item {
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+/* 分析页面样式 */
+.analysis-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-base);
+}
+
+.stat-card {
+  background-color: var(--card-background);
+  border-radius: var(--corner-radius);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-sm);
+  text-align: center;
+  transition: var(--transition);
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 4px;
+  transition: var(--transition);
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+/* 图表容器 */
+.chart-container {
+  margin-bottom: var(--spacing-base);
+  height: auto;
+  min-height: 200px;
+  background-color: var(--card-background);
+  border-radius: var(--corner-radius);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-base);
+  transition: var(--transition);
+}
+
+/* 响应式调整 */
+@media (max-width: 480px) {
+  .analysis-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-container {
+    height: auto;
+  }
+  
+  #main-content {
+    padding: var(--spacing-sm);
+    padding-bottom: 70px;
+  }
+  
+  .card {
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  /* 日历响应式调整 */
+  .calendar-grid {
+    gap: 2px;
+  }
+  
+  .calendar-day {
+    font-size: 12px;
+    padding: 4px;
+  }
+  
+  .calendar-weekday {
+    font-size: 10px;
+  }
+  
+  /* 标签响应式调整 */
+  .tag {
+    padding: 4px 10px;
+    font-size: 12px;
+    margin: 2px;
+  }
+  
+  /* 按钮响应式调整 */
+  .btn {
+    padding: var(--spacing-sm);
+    font-size: 14px;
+  }
+  
+  /* 食物选择模态框响应式调整 */
+  .food-modal-content {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  /* 编辑页面响应式调整 */
+  .edit-page .card {
+    padding: var(--spacing-sm);
+  }
+  
+  /* 列表项响应式调整 */
+  .list-item {
+    padding: var(--spacing-sm);
+  }
+  
+  /* 心情评分响应式调整 */
+  .mood-rating {
+    gap: 8px;
+  }
+  
+  .mood-button {
+    padding: 8px;
+  }
+  
+  .mood-emoji {
+    font-size: 1.2rem;
+  }
+  
+  .mood-text {
+    font-size: 0.7rem;
+  }
+  
+  /* 设置按钮响应式调整 */
+  .settings-button {
+    padding: var(--spacing-sm);
+    font-size: 14px;
+  }
+}
+
+/* 平板设备响应式调整 */
+@media (min-width: 481px) and (max-width: 768px) {
+  .analysis-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .chart-container {
+    height: 300px;
+  }
+  
+  #main-content {
+    padding: var(--spacing-base);
+    padding-bottom: 80px;
+  }
+  
+  .card {
+    padding: var(--spacing-base);
+    margin-bottom: var(--spacing-base);
+  }
+  
+  /* 日历响应式调整 */
+  .calendar-grid {
+    gap: 3px;
+  }
+  
+  .calendar-day {
+    font-size: 14px;
+    padding: 6px;
+  }
+  
+  .calendar-weekday {
+    font-size: 12px;
+  }
+  
+  /* 标签响应式调整 */
+  .tag {
+    padding: 6px 12px;
+    font-size: 14px;
+    margin: 3px;
+  }
+  
+  /* 按钮响应式调整 */
+  .btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: 16px;
+  }
+  
+  /* 食物选择模态框响应式调整 */
+  .food-modal-content {
+    width: 80%;
+    max-height: 85vh;
+  }
+  
+  /* 编辑页面响应式调整 */
+  .edit-page .card {
+    padding: var(--spacing-base);
+  }
+  
+  /* 列表项响应式调整 */
+  .list-item {
+    padding: var(--spacing-sm) 0;
+  }
+  
+  /* 心情评分响应式调整 */
+  .mood-rating {
+    gap: var(--spacing-sm);
+  }
+  
+  .mood-button {
+    padding: var(--spacing-sm);
+  }
+  
+  .mood-emoji {
+    font-size: 1.5rem;
+  }
+  
+  .mood-text {
+    font-size: 0.8rem;
+  }
+  
+  /* 设置按钮响应式调整 */
+  .settings-button {
+    padding: var(--spacing-base);
+    font-size: 16px;
+  }
+}
+
+/* 桌面设备响应式调整 */
+@media (min-width: 769px) {
+  .analysis-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .chart-container {
+    height: 350px;
+  }
+  
+  #main-content {
+    padding: var(--spacing-lg);
+    padding-bottom: 90px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .card {
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  /* 日历响应式调整 */
+  .calendar-grid {
+    gap: 4px;
+  }
+  
+  .calendar-day {
+    font-size: 16px;
+    padding: 8px;
+  }
+  
+  .calendar-weekday {
+    font-size: 14px;
+  }
+  
+  /* 标签响应式调整 */
+  .tag {
+    padding: 8px 16px;
+    font-size: 16px;
+    margin: 4px;
+  }
+  
+  /* 按钮响应式调整 */
+  .btn {
+    padding: var(--spacing-base) var(--spacing-xl);
+    font-size: 16px;
+  }
+  
+  /* 食物选择模态框响应式调整 */
+  .food-modal-content {
+    width: 60%;
+    max-height: 80vh;
+  }
+  
+  /* 编辑页面响应式调整 */
+  .edit-page .card {
+    padding: var(--spacing-lg);
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  /* 列表项响应式调整 */
+  .list-item {
+    padding: var(--spacing-base) 0;
+  }
+  
+  /* 心情评分响应式调整 */
+  .mood-rating {
+    gap: var(--spacing-base);
+  }
+  
+  .mood-button {
+    padding: var(--spacing-base);
+  }
+  
+  .mood-emoji {
+    font-size: 1.8rem;
+  }
+  
+  .mood-text {
+    font-size: 0.9rem;
+  }
+  
+  /* 设置按钮响应式调整 */
+  .settings-button {
+    padding: var(--spacing-lg);
+    font-size: 18px;
+  }
+  
+  /* 底部导航响应式调整 */
+  #bottom-nav {
+    max-width: 1200px;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+    border-radius: 16px 16px 0 0;
+    margin-bottom: 0;
+  }
+}
+
+/* 提示信息 */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-base);
+  border-radius: var(--corner-radius-sm);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+}
+
+.toast.show {
+  transform: translateX(0);
+}
+
+/* 加载状态 */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-lg) 0;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+/* 模态框 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: var(--card-background);
+  border-radius: var(--corner-radius);
+  padding: var(--spacing-base);
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transition: var(--transition);
+}
+
+.modal-header {
+  margin-bottom: var(--spacing-base);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-sm);
+  transition: var(--transition);
+}
+
+.modal-body {
+  margin-bottom: var(--spacing-base);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}
+
+/* 活动标签选择 */
+.activity-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-base);
+}
+
+.activity-tag {
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: var(--transition);
+  background-color: var(--card-background);
+  color: var(--text-primary);
+}
+
+.activity-tag:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.activity-tag.selected {
+  background-color: rgba(99, 102, 241, 0.2);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+/* 食物分类选择 */
+.food-categories {
+  margin-bottom: var(--spacing-base);
+}
+
+.food-category {
+  margin-bottom: var(--spacing-sm);
+}
+
+.food-category-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm);
+  background-color: var(--card-background);
+  border-radius: var(--corner-radius-sm);
+  cursor: pointer;
+  margin-bottom: 8px;
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.food-category-label:hover {
+  border-color: var(--primary-color);
+}
+
+.food-items {
+  padding-left: var(--spacing-base);
+}
+
+.food-item {
+  padding: 8px 0;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+  transition: var(--transition);
+  color: var(--text-primary);
+}
+
+.food-item:hover {
+  color: var(--primary-color);
+}
+
+.food-item:last-child {
+  border-bottom: none;
+}
+
+.food-item.selected {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+/* 心情评分 */
+.mood-rating {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-base);
+}
+
+.mood-star {
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--border-color);
+  transition: var(--transition);
+}
+
+.mood-star:hover {
+  color: #fbbf24;
+}
+
+.mood-star.active {
+  color: #fbbf24;
+}
+
+/* 食物类别项目 */
+.food-category-item {
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background-color: var(--card-background);
+  border-radius: var(--corner-radius-sm);
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.food-category-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+.food-category-name {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+/* 日期选择器 */
+.date-picker-container {
+  margin-bottom: var(--spacing-base);
+}
+
+/* 备注输入 */
+.notes-input {
+  border: 1px solid var(--border-color);
+  border-radius: var(--corner-radius-sm);
+  padding: var(--spacing-sm);
+  min-height: 100px;
+  font-size: var(--font-size-base);
+  resize: vertical;
+  background-color: var(--card-background);
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.notes-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+/* 保存按钮 */
+.save-button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: var(--spacing-base);
+  border-radius: var(--corner-radius);
+  text-align: center;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-button);
+  margin: var(--spacing-base) 0;
+}
+
+.save-button:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.2);
+}
+
+.save-button:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-button);
+}
+
+/* 食物选择模态框 */
+.food-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.food-modal-content {
+  background-color: var(--card-background);
+  border-radius: var(--corner-radius);
+  padding: var(--spacing-base);
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  transition: var(--transition);
+}
+
+.food-modal-header {
+  margin-bottom: var(--spacing-base);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-sm);
+  transition: var(--transition);
+}
+
+.food-modal-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.food-input-container {
+  margin-bottom: var(--spacing-base);
+}
+
+.food-input {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--corner-radius-sm);
+  background-color: var(--card-background);
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.food-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.modal-button-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-base);
+}
+
+.modal-save-button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: var(--spacing-sm);
+  border: none;
+  border-radius: var(--corner-radius-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  flex: 1;
+}
+
+.modal-save-button:hover {
+  background-color: var(--primary-dark);
+}
+
+.modal-button {
+  padding: var(--spacing-sm);
+  border: none;
+  border-radius: var(--corner-radius-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  flex: 1;
+}
+
+.modal-button-cancel {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+  margin-right: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+}
+
+.modal-button-cancel:hover {
+  background-color: #d4d4d4;
+}
+
+body.dark-theme .modal-button-cancel:hover {
+  background-color: #444;
+}
+
+.modal-button-confirm {
+  background-color: var(--primary-color);
+  color: white;
+  margin-left: var(--spacing-sm);
+}
+
+.modal-button-confirm:hover {
+  background-color: var(--primary-dark);
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--spacing-base);
+}
+
+.existing-foods {
+  margin-bottom: var(--spacing-base);
+}
+
+.existing-foods-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+  transition: var(--transition);
+}
+
+.existing-food-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm);
+  background-color: var(--border-color);
+  border-radius: var(--corner-radius-sm);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.existing-food-item:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+}
+
+.existing-food-text {
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.checkmark-text {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--success-color);
+  transition: var(--transition);
+}
+
+/* 选中的食物列表 */
+.selected-foods {
+  margin-bottom: var(--spacing-base);
+}
+
+.selected-foods-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+  transition: var(--transition);
+}
+
+.selected-food-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm);
+  background-color: rgba(99, 102, 241, 0.1);
+  border-radius: var(--corner-radius-sm);
+  margin-bottom: 8px;
+  transition: var(--transition);
+}
+
+.selected-food-text {
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.remove-food-text {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--danger-color);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.remove-food-text:hover {
+  opacity: 0.8;
+}
+
+/* 响应式字体大小 */
+@media (max-width: 360px) {
+  :root {
+    --font-size-base: 14px;
+    --font-size-sm: 12px;
+    --font-size-lg: 16px;
+  }
+  
+  .nav-icon {
+    font-size: 1.25rem;
+  }
+  
+  .nav-label {
+    font-size: 0.7rem;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeIn 0.3s ease;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-secondary);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
+
+body.dark-theme ::-webkit-scrollbar-track {
+  background: #333;
+}
+
+body.dark-theme ::-webkit-scrollbar-thumb {
+  background: #666;
+}
+
+body.dark-theme ::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-light);
+}
+
+/* 日历样式 */
+.calendar-container {
+  margin-bottom: var(--spacing-base);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: var(--spacing-sm);
+  width: 100%;
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  padding: 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: var(--spacing-base);
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.calendar-day.empty {
+  background-color: transparent;
+  cursor: default;
+}
+
+.calendar-day.today {
+  border: 2px solid var(--primary-color);
+}
+
+.calendar-day.marked {
+  font-weight: 600;
+}
+
+.calendar-day:hover {
+  transform: scale(1.05);
+}
+
+/* 心情评分样式 */
+.mood-rating {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-base);
+}
+
+.mood-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-sm);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  background-color: var(--border-color);
+}
+
+.mood-button:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+}
+
+.mood-button.selected {
+  background-color: rgba(99, 102, 241, 0.2);
+  border: 1px solid var(--primary-color);
+}
+
+.mood-emoji {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.mood-text {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.mood-button.selected .mood-text {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* 设置按钮容器 */
+.settings-buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-base);
+}
+
+/* 设置按钮 */
+.settings-button {
+  width: 100%;
+  padding: var(--spacing-base);
+  border: none;
+  border-radius: var(--corner-radius);
+  background-color: var(--primary-color);
+  color: white;
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+  box-shadow: var(--shadow-button);
+}
+
+.settings-button:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.2);
+}
+
+.settings-button:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-button);
+}
