@@ -4,5 +4,8 @@
   "webDir": "web",
   "server": {
     "androidScheme": "https"
+  },
+  "android": {
+    "icon": "book.png"
   }
 }

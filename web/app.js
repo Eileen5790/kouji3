@@ -44,6 +44,24 @@ const i18n = {
     location_distribution: '地点分布',
     food_distribution: '饮食分布',
     mood_trend: '心情趋势',
+    location_analysis: '地点分析',
+    activity_analysis: '活动分析',
+    food_analysis: '饮食分析',
+    all: '全部',
+    last_7_days: '最近七天',
+    manage_activities: '活动管理',
+    manage_locations: '地点管理',
+    manage_foods: '饮食管理',
+    manage_data: '数据管理',
+    manage_about: '关于',
+    edit_record: '编辑记录',
+    sunday: '日',
+    monday: '一',
+    tuesday: '二',
+    wednesday: '三',
+    thursday: '四',
+    friday: '五',
+    saturday: '六',
     week: '周',
     month: '月',
     year: '年',
@@ -132,6 +150,24 @@ const i18n = {
     location_distribution: 'Location Distribution',
     food_distribution: 'Food Distribution',
     mood_trend: 'Mood Trend',
+    location_analysis: 'Location Analysis',
+    activity_analysis: 'Activity Analysis',
+    food_analysis: 'Food Analysis',
+    all: 'All',
+    last_7_days: 'Last 7 Days',
+    manage_activities: 'Manage Activities',
+    manage_locations: 'Manage Locations',
+    manage_foods: 'Manage Foods',
+    manage_data: 'Manage Data',
+    manage_about: 'About',
+    edit_record: 'Edit Record',
+    sunday: 'Sun',
+    monday: 'Mon',
+    tuesday: 'Tue',
+    wednesday: 'Wed',
+    thursday: 'Thu',
+    friday: 'Fri',
+    saturday: 'Sat',
     week: 'Week',
     month: 'Month',
     year: 'Year',
@@ -186,6 +222,7 @@ function init() {
     storage.theme = localStorage.getItem('theme') || 'light';
     storage.diaryEntries = JSON.parse(localStorage.getItem('diaryEntries') || '[]');
     storage.activities = JSON.parse(localStorage.getItem('activities') || '[]');
+    storage.activitySubcategories = JSON.parse(localStorage.getItem('activitySubcategories') || '[]');
     storage.locations = JSON.parse(localStorage.getItem('locations') || '[]');
     storage.foodCategories = JSON.parse(localStorage.getItem('foodCategories') || '[]');
     storage.foods = JSON.parse(localStorage.getItem('foods') || '[]');
@@ -195,6 +232,7 @@ function init() {
     storage.theme = 'light';
     storage.diaryEntries = [];
     storage.activities = [];
+    storage.activitySubcategories = [];
     storage.locations = [];
     storage.foodCategories = [];
     storage.foods = [];
@@ -211,6 +249,28 @@ function init() {
       { id: 5, name: '社交', color: '#8b5cf6' }
     ];
     localStorage.setItem('activities', JSON.stringify(storage.activities));
+  }
+  
+  // 初始化活动子类别
+  if (!storage.activitySubcategories) {
+    storage.activitySubcategories = [
+      { id: 1, activityId: 1, name: '高等数学' },
+      { id: 2, activityId: 1, name: '英语' },
+      { id: 3, activityId: 1, name: '编程' },
+      { id: 4, activityId: 2, name: '会议' },
+      { id: 5, activityId: 2, name: '文档' },
+      { id: 6, activityId: 2, name: '开发' },
+      { id: 7, activityId: 3, name: '电影' },
+      { id: 8, activityId: 3, name: '游戏' },
+      { id: 9, activityId: 3, name: '音乐' },
+      { id: 10, activityId: 4, name: '跑步' },
+      { id: 11, activityId: 4, name: '游泳' },
+      { id: 12, activityId: 4, name: '健身' },
+      { id: 13, activityId: 5, name: '朋友' },
+      { id: 14, activityId: 5, name: '家人' },
+      { id: 15, activityId: 5, name: '同事' }
+    ];
+    localStorage.setItem('activitySubcategories', JSON.stringify(storage.activitySubcategories));
   }
 
   if (storage.locations.length === 0) {
@@ -265,6 +325,7 @@ let currentLang = 'zh';
 let currentTheme = 'light';
 let diaryEntries = [];
 let activities = [];
+let activitySubcategories = [];
 let locations = [];
 let foodCategories = [];
 let foods = [];
@@ -279,6 +340,12 @@ let currentFoodCategory = null;
 let selectedFoods = [];
 let foodInput = '';
 let showEditPage = false;
+
+// 活动细节相关变量
+let showActivityDetailModal = false;
+let currentActivity = null;
+let activityDetailInput = '';
+let selectedActivityDetails = [];
 
 // 日历相关变量
 let markedDates = {};
@@ -387,9 +454,15 @@ function renderCurrentTab() {
   if (existingModal) {
     existingModal.remove();
   }
+  const existingActivityModal = document.getElementById('activity-detail-modal');
+  if (existingActivityModal) {
+    existingActivityModal.remove();
+  }
 
   if (showFoodModal) {
     renderFoodModal();
+  } else if (showActivityDetailModal) {
+    renderActivityDetailModal();
   } else if (showEditPage) {
     // 隐藏导航栏
     document.getElementById('bottom-nav').style.display = 'none';
@@ -419,18 +492,29 @@ function renderEditPage() {
   const entry = editingEntryId ? diaryEntries.find(e => e.id === editingEntryId) : null;
   if (!entry) return;
   
+  // 设置会话变量为编辑记录的值
+  window.activitySelections = entry.activities || [];
+  window.locationSelection = Array.isArray(entry.locations) ? entry.locations : (entry.location ? [entry.location] : []);
+  window.foodSelections = entry.foods || {};
+  window.activityDetails = entry.activityDetails || {};
+  window.recordDate = entry.date.slice(0, 10);
+  
   const today = new Date().toISOString().slice(0, 16);
-  const selectedActivities = entry.activities || [];
-  const selectedLocations = Array.isArray(entry.locations) ? entry.locations : (entry.location ? [entry.location] : []);
-  const recordSelectedFoods = window.foodSelections || entry.foods || {};
+  const selectedActivities = window.activitySelections;
+  const selectedLocations = window.locationSelection;
+  const recordSelectedFoods = window.foodSelections;
+  const recordActivityDetails = window.activityDetails;
   const selectedMood = entry.mood || 3;
   const notes = entry.notes || '';
+  const currentDate = window.recordDate;
 
-  let activityOptions = activities.map(activity => `
-    <div class="tag ${selectedActivities.includes(activity.id) ? 'selected' : ''}" data-id="${activity.id}">
-      ${activity.name}
-    </div>
-  `).join('');
+  let activityOptions = activities.map(activity => {
+    return `
+      <div class="tag ${selectedActivities.includes(activity.id) ? 'selected' : ''}" data-id="${activity.id}">
+        ${activity.name}
+      </div>
+    `;
+  }).join('');
 
   let locationOptions = locations.map(location => `
     <div class="tag ${selectedLocations.includes(location.id) ? 'selected' : ''}" data-id="${location.id}">
@@ -438,80 +522,95 @@ function renderEditPage() {
     </div>
   `).join('');
 
-  let foodOptions = foodCategories.map(category => `
-    <div class="tag" data-id="${category.id}">
-      ${category.name}
-    </div>
-  `).join('');
+  let foodOptions = foodCategories.map(category => {
+    return `
+      <div class="tag ${recordSelectedFoods[category.id] ? 'selected' : ''}" data-id="${category.id}">
+        ${category.name}
+      </div>
+    `;
+  }).join('');
 
-  let foodDisplay = '';
-  Object.entries(recordSelectedFoods).forEach(([categoryId, foodNames]) => {
-    const category = foodCategories.find(c => c.id == categoryId);
-    if (category && foodNames) {
-      foodDisplay += `<p><strong>${category.name}:</strong> ${foodNames}</p>`;
-    }
-  });
+  let moodEmojis = ['😢', '😔', '😐', '😊', '😄'];
+  let moodOptions = moodEmojis.map((emoji, index) => {
+    const moodValue = index + 1;
+    return `
+      <div class="mood-button ${moodValue === selectedMood ? 'selected' : ''}" data-value="${moodValue}">
+        <span class="mood-emoji">${emoji}</span>
+        <span class="mood-text">${moodValue}</span>
+      </div>
+    `;
+  }).join('');
 
   mainContent.innerHTML = `
     <div class="edit-page">
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h2>编辑记录</h2>
+          <h2>${t('edit_record')}</h2>
           <button class="btn btn-secondary" id="cancel-edit">${t('back')}</button>
         </div>
         <div class="form-group">
           <label class="form-label">${t('date')}</label>
-          <input type="date" class="form-input" id="record-date" value="${entry.date.slice(0, 10)}">
+          <input type="date" class="form-input" id="record-date" value="${currentDate}">
         </div>
         <div class="form-group">
           <label class="form-label">${t('activities')}</label>
-          <div class="tags-container" id="activity-tags">
+          <div class="activity-tags" id="activity-tags">
             ${activityOptions}
+          </div>
+          <div class="food-container" id="activity-container">
+            ${Object.entries(recordActivityDetails).map(([activityId, activityDetail]) => {
+              if (activityDetail) {
+                const activity = activities.find(a => a.id == activityId);
+                if (activity) {
+                  return `
+                    <div class="food-category-item">
+                      <div class="food-category-indicator" style="background-color: ${activity.color}"></div>
+                      <div class="food-category-name">${activity.name}: ${activityDetail}</div>
+                    </div>
+                  `;
+                }
+              }
+              return '';
+            }).join('')}
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">${t('locations')}</label>
-          <div class="tags-container" id="location-tags">
+          <div class="activity-tags" id="location-tags">
             ${locationOptions}
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">${t('foods')}</label>
-          <div class="tags-container" id="food-tags">
+          <div class="activity-tags" id="food-tags">
             ${foodOptions}
           </div>
-          <div id="food-display" style="margin-top: 12px; word-break: break-word;">
-            ${foodDisplay || `<p>${t('no_foods_selected')}</p>`}
+          <div class="food-container" id="food-container">
+            ${Object.entries(recordSelectedFoods).map(([categoryId, foodName]) => {
+              if (foodName) {
+                const category = foodCategories.find(c => c.id == categoryId);
+                if (category) {
+                  return `
+                    <div class="food-category-item">
+                      <div class="food-category-indicator" style="background-color: ${category.color}"></div>
+                      <div class="food-category-name">${category.name}: ${foodName}</div>
+                    </div>
+                  `;
+                }
+              }
+              return '';
+            }).join('')}
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">${t('mood')}</label>
-          <div class="mood-rating">
-            <div class="mood-button ${selectedMood === 1 ? 'selected' : ''}" data-value="1">
-              <div class="mood-emoji">😢</div>
-              <div class="mood-text">很差</div>
-            </div>
-            <div class="mood-button ${selectedMood === 2 ? 'selected' : ''}" data-value="2">
-              <div class="mood-emoji">😔</div>
-              <div class="mood-text">较差</div>
-            </div>
-            <div class="mood-button ${selectedMood === 3 ? 'selected' : ''}" data-value="3">
-              <div class="mood-emoji">😐</div>
-              <div class="mood-text">一般</div>
-            </div>
-            <div class="mood-button ${selectedMood === 4 ? 'selected' : ''}" data-value="4">
-              <div class="mood-emoji">😊</div>
-              <div class="mood-text">较好</div>
-            </div>
-            <div class="mood-button ${selectedMood === 5 ? 'selected' : ''}" data-value="5">
-              <div class="mood-emoji">😄</div>
-              <div class="mood-text">很好</div>
-            </div>
+          <div class="mood-rating" id="mood-rating">
+            ${moodOptions}
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">${t('notes')}</label>
-          <textarea class="form-input" id="record-notes" rows="3">${notes}</textarea>
+          <textarea class="form-input notes-input" id="record-notes" placeholder="${t('notes')}">${notes}</textarea>
         </div>
         <button class="btn btn-primary" id="save-record">${t('save')}</button>
       </div>
@@ -523,19 +622,40 @@ function renderEditPage() {
     tag.addEventListener('click', () => {
       const tagId = parseInt(tag.dataset.id);
       const tagType = tag.closest('#activity-tags') ? 'activity' : 
-                    tag.closest('#location-tags') ? 'location' : 
-                    tag.closest('#food-tags') ? 'food' : '';
+                    tag.closest('#location-tags') ? 'location' : 'food';
       
       if (tagType === 'activity') {
         tag.classList.toggle('selected');
+        // 保存活动选择
+        window.activitySelections = Array.from(document.querySelectorAll('#activity-tags .tag.selected')).map(t => parseInt(t.dataset.id));
+        // 如果活动被选中，打开活动细节模态框
+        if (tag.classList.contains('selected')) {
+          currentActivity = tagId;
+          activityDetailInput = '';
+          // 如果是编辑模式，并且当前活动已经有活动细节，则使用这些细节
+          if (editingEntryId && window.activityDetails[tagId]) {
+            selectedActivityDetails = window.activityDetails[tagId].split(', ');
+          } else {
+            selectedActivityDetails = [];
+          }
+          showActivityDetailModal = true;
+          renderEditPage();
+        }
       } else if (tagType === 'location') {
         tag.classList.toggle('selected');
+        // 保存地点选择
+        window.locationSelection = Array.from(document.querySelectorAll('#location-tags .tag.selected')).map(t => parseInt(t.dataset.id));
       } else if (tagType === 'food') {
         currentFoodCategory = tagId;
         foodInput = '';
-        selectedFoods = [];
+        // 如果是编辑模式，并且当前类别已经有食物选择，则使用这些选择
+        if (editingEntryId && window.foodSelections[tagId]) {
+          selectedFoods = window.foodSelections[tagId].split(', ');
+        } else {
+          selectedFoods = [];
+        }
         showFoodModal = true;
-        renderCurrentTab();
+        renderEditPage();
       }
     });
   });
@@ -550,64 +670,40 @@ function renderEditPage() {
     });
   });
 
-  const saveButton = document.getElementById('save-record');
-  if (saveButton) {
-    saveButton.addEventListener('click', () => {
-      const date = document.getElementById('record-date').value;
-      const selectedActivities = Array.from(document.querySelectorAll('#activity-tags .tag.selected')).map(tag => parseInt(tag.dataset.id));
-      const selectedLocations = Array.from(document.querySelectorAll('#location-tags .tag.selected')).map(tag => parseInt(tag.dataset.id));
-      const locations = selectedLocations.length > 0 ? selectedLocations : null;
-      const notes = document.getElementById('record-notes').value;
-      const selectedMood = Array.from(document.querySelectorAll('.mood-button.selected'))[0];
-      const mood = selectedMood ? parseInt(selectedMood.dataset.value) : 3;
-
-      // 收集食物选择
-      const foods = window.foodSelections || entry.foods;
-
-      if (selectedActivities.length === 0) {
-        showToast(`${t('tip')}: ${t('please_select_activity')}`);
-        return;
-      }
-
-      // 设置时间为中午12点，确保日期一致性
-      const currentDate = new Date(date);
-      currentDate.setHours(12, 0, 0, 0);
-
-      const updatedEntry = {
-        id: editingEntryId,
-        date: currentDate.toISOString(),
-        activities: selectedActivities,
-        locations: locations,
-        foods: foods,
-        mood: mood,
-        notes: notes
-      };
-
-      const index = diaryEntries.findIndex(e => e.id === editingEntryId);
-      if (index !== -1) {
-        diaryEntries[index] = updatedEntry;
-
-        saveDiaryEntries();
-        editingEntryId = null;
-        window.foodSelections = {};
-        showEditPage = false;
-        showToast(t('record_saved'));
-        currentTab = 'data';
-        renderCurrentTab();
-      } else {
-        showToast('错误：找不到要编辑的记录');
-      }
+  // 绑定日期输入框的change事件
+  const dateInput = document.getElementById('record-date');
+  if (dateInput) {
+    dateInput.addEventListener('change', (e) => {
+      window.recordDate = e.target.value;
     });
   }
 
+  document.getElementById('save-record').addEventListener('click', handleSaveRecord);
+
+  // 绑定取消按钮事件
   const cancelButton = document.getElementById('cancel-edit');
   if (cancelButton) {
-    cancelButton.addEventListener('click', () => {
+    cancelButton.addEventListener('click', function() {
       editingEntryId = null;
+      window.foodSelections = {};
+      window.activityDetails = {};
+      window.activitySelections = [];
+      window.locationSelection = '';
+      window.recordDate = null;
       showEditPage = false;
       currentTab = 'data';
       renderCurrentTab();
     });
+  }
+
+  // 显示活动细节模态框
+  if (showActivityDetailModal) {
+    renderActivityDetailModal();
+  }
+
+  // 显示食物选择模态框
+  if (showFoodModal) {
+    renderFoodModal();
   }
 }
 
@@ -615,21 +711,33 @@ function renderEditPage() {
 function renderRecordTab() {
   const entry = editingEntryId ? diaryEntries.find(e => e.id === editingEntryId) : null;
   const today = new Date().toISOString().slice(0, 16);
+  
   // 优先使用当前会话中的活动和地点选择，如果没有则使用编辑记录中的选择
   const selectedActivities = window.activitySelections || (entry ? entry.activities : []);
   const selectedLocations = window.locationSelection || (entry ? (Array.isArray(entry.locations) ? entry.locations : (entry.location ? [entry.location] : [])) : []);
   // 优先使用当前会话中的食物选择，如果没有则使用编辑记录中的食物选择
   const recordSelectedFoods = window.foodSelections || (entry ? entry.foods : {});
+  // 优先使用当前会话中的活动细节，如果没有则使用编辑记录中的活动细节
+  const recordActivityDetails = window.activityDetails || (entry ? entry.activityDetails : {});
   const selectedMood = entry ? entry.mood : 3;
   const notes = entry ? entry.notes : '';
   // 优先使用当前会话中的日期选择，如果没有则使用编辑记录中的日期，否则使用当天日期
   const currentDate = window.recordDate || (entry ? entry.date.slice(0, 10) : new Date().toISOString().slice(0, 10));
+  
+  // 确保会话中的值与当前选择一致
+  window.activitySelections = selectedActivities;
+  window.locationSelection = selectedLocations;
+  window.foodSelections = recordSelectedFoods;
+  window.activityDetails = recordActivityDetails;
+  window.recordDate = currentDate;
 
-  let activityOptions = activities.map(activity => `
-    <div class="tag ${selectedActivities.includes(activity.id) ? 'selected' : ''}" data-id="${activity.id}">
-      ${activity.name}
-    </div>
-  `).join('');
+  let activityOptions = activities.map(activity => {
+    return `
+      <div class="tag ${selectedActivities.includes(activity.id) ? 'selected' : ''}" data-id="${activity.id}">
+        ${activity.name}
+      </div>
+    `;
+  }).join('');
 
   let locationOptions = locations.map(location => `
     <div class="tag ${selectedLocations.includes(location.id) ? 'selected' : ''}" data-id="${location.id}">
@@ -667,6 +775,22 @@ function renderRecordTab() {
         <label class="form-label">${t('activities')}</label>
         <div class="activity-tags" id="activity-tags">
           ${activityOptions}
+        </div>
+        <div class="food-container" id="activity-container">
+          ${Object.entries(recordActivityDetails).map(([activityId, activityDetail]) => {
+            if (activityDetail) {
+              const activity = activities.find(a => a.id == activityId);
+              if (activity) {
+                return `
+                  <div class="food-category-item">
+                    <div class="food-category-indicator" style="background-color: ${activity.color}"></div>
+                    <div class="food-category-name">${activity.name}: ${activityDetail}</div>
+                  </div>
+                `;
+              }
+            }
+            return '';
+          }).join('')}
         </div>
       </div>
       <div class="form-group">
@@ -722,6 +846,19 @@ function renderRecordTab() {
         tag.classList.toggle('selected');
         // 保存活动选择
         window.activitySelections = Array.from(document.querySelectorAll('#activity-tags .tag.selected')).map(t => parseInt(t.dataset.id));
+        // 如果活动被选中，打开活动细节模态框
+        if (tag.classList.contains('selected')) {
+          currentActivity = tagId;
+          activityDetailInput = '';
+          // 如果是编辑模式，并且当前活动已经有活动细节，则使用这些细节
+          if (editingEntryId && window.activityDetails[tagId]) {
+            selectedActivityDetails = window.activityDetails[tagId].split(', ');
+          } else {
+            selectedActivityDetails = [];
+          }
+          showActivityDetailModal = true;
+          renderCurrentTab();
+        }
       } else if (tagType === 'location') {
         tag.classList.toggle('selected');
         // 保存地点选择
@@ -729,7 +866,12 @@ function renderRecordTab() {
       } else if (tagType === 'food') {
         currentFoodCategory = tagId;
         foodInput = '';
-        selectedFoods = [];
+        // 如果是编辑模式，并且当前类别已经有食物选择，则使用这些选择
+        if (editingEntryId && window.foodSelections[tagId]) {
+          selectedFoods = window.foodSelections[tagId].split(', ');
+        } else {
+          selectedFoods = [];
+        }
         showFoodModal = true;
         renderCurrentTab();
       }
@@ -922,6 +1064,166 @@ function handleConfirmFood() {
   renderCurrentTab();
 }
 
+// 渲染活动细节模态框
+function renderActivityDetailModal() {
+  // 先移除现有的模态框
+  const existingModal = document.getElementById('activity-detail-modal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const currentActivityObj = activities.find(a => a.id === currentActivity);
+  const activitySubs = activitySubcategories.filter(sub => sub.activityId === currentActivity);
+  let placeholder = '请输入活动细节';
+  
+  // 根据活动类型设置不同的占位符
+  switch (currentActivityObj.name) {
+    case '学习':
+      placeholder = '请输入学科（如：高等数学）';
+      break;
+    case '旅游':
+      placeholder = '请输入地点（如：北京）';
+      break;
+    case '社交':
+      placeholder = '请输入人名/身份（如：朋友）';
+      break;
+  }
+
+  const modalHTML = `
+    <div class="modal" id="activity-detail-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">${t('select')} ${currentActivityObj ? currentActivityObj.name : 'Activity'} 细节</h3>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <input type="text" class="form-input" id="activity-detail-input" placeholder="${placeholder}" value="${activityDetailInput}">
+          </div>
+          <div class="modal-button-row">
+            <button class="modal-save-button" style="margin-right: 8px" id="add-activity-detail-btn">${t('add_food')}</button>
+            <button class="modal-save-button" style="margin-left: 8px" id="random-activity-detail-btn">是啊，干什么</button>
+          </div>
+          ${activitySubs.length > 0 ? `
+            <div class="existing-foods">
+              <h4>已添加的子类别</h4>
+              ${activitySubs.map(sub => `
+                <div class="existing-food-item ${selectedActivityDetails.includes(sub.name) ? 'selected' : ''}" data-subcategory="${sub.name}">
+                  <span class="existing-food-text">${sub.name}</span>
+                  ${selectedActivityDetails.includes(sub.name) ? '<span class="checkmark-text">×</span>' : ''}
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+        <div class="modal-buttons">
+          <button class="modal-button modal-button-cancel" id="cancel-activity-detail-btn">${t('back')}</button>
+          <button class="modal-button modal-button-confirm" id="confirm-activity-detail-btn">${t('confirm')}</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // 添加新的模态框
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+  // 绑定事件
+  document.getElementById('activity-detail-input').addEventListener('input', (e) => {
+    activityDetailInput = e.target.value;
+  });
+
+  document.getElementById('add-activity-detail-btn').addEventListener('click', handleAddActivityDetail);
+  document.getElementById('random-activity-detail-btn').addEventListener('click', handleRandomActivityDetail);
+
+  // 绑定子类别点击事件
+  document.querySelectorAll('.existing-food-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const subcategoryName = item.dataset.subcategory;
+      if (selectedActivityDetails.includes(subcategoryName)) {
+        selectedActivityDetails = selectedActivityDetails.filter(sub => sub !== subcategoryName);
+      } else {
+        selectedActivityDetails.push(subcategoryName);
+      }
+      renderActivityDetailModal();
+    });
+  });
+
+  document.getElementById('cancel-activity-detail-btn').addEventListener('click', handleCancelActivityDetail);
+  document.getElementById('confirm-activity-detail-btn').addEventListener('click', handleConfirmActivityDetail);
+}
+
+// 处理取消活动细节
+function handleCancelActivityDetail() {
+  showActivityDetailModal = false;
+  activityDetailInput = '';
+  selectedActivityDetails = [];
+  renderCurrentTab();
+}
+
+// 处理添加活动细节
+function handleAddActivityDetail() {
+  if (activityDetailInput.trim()) {
+    const detailName = activityDetailInput.trim();
+    
+    // 添加到选中活动细节列表
+    if (!selectedActivityDetails.includes(detailName)) {
+      selectedActivityDetails.push(detailName);
+    }
+    
+    // 检查是否已存在于活动子类别数据库中
+    const existingSubcategory = activitySubcategories.find(sub => sub.activityId === currentActivity && sub.name === detailName);
+    if (!existingSubcategory) {
+      // 添加到活动子类别数据库
+      const newSubcategory = {
+        id: Date.now(),
+        activityId: currentActivity,
+        name: detailName
+      };
+      activitySubcategories.push(newSubcategory);
+      localStorage.setItem('activitySubcategories', JSON.stringify(activitySubcategories));
+    }
+    
+    activityDetailInput = '';
+    renderActivityDetailModal();
+  }
+}
+
+// 处理随机活动细节
+function handleRandomActivityDetail() {
+  const activitySubs = activitySubcategories.filter(sub => sub.activityId === currentActivity);
+  if (activitySubs.length > 0) {
+    const availableSubs = activitySubs.filter(sub => !selectedActivityDetails.includes(sub.name));
+    const subToAdd = availableSubs.length > 0 ? 
+      availableSubs[Math.floor(Math.random() * availableSubs.length)] : 
+      activitySubs[Math.floor(Math.random() * activitySubs.length)];
+    
+    if (!selectedActivityDetails.includes(subToAdd.name)) {
+      selectedActivityDetails.push(subToAdd.name);
+      renderActivityDetailModal();
+    }
+  }
+}
+
+// 处理确认活动细节
+function handleConfirmActivityDetail() {
+  // 保存活动细节
+  if (!window.activityDetails) {
+    window.activityDetails = {};
+  }
+  
+  // 如果选择了子类别，使用子类别作为细节
+  if (selectedActivityDetails.length > 0) {
+    window.activityDetails[currentActivity] = selectedActivityDetails.join(', ');
+  } else {
+    // 否则使用输入的细节
+    window.activityDetails[currentActivity] = activityDetailInput;
+  }
+  
+  showActivityDetailModal = false;
+  activityDetailInput = '';
+  selectedActivityDetails = [];
+  renderCurrentTab();
+}
+
 // 处理保存记录
 function handleSaveRecord() {
   const date = document.getElementById('record-date').value;
@@ -934,6 +1236,8 @@ function handleSaveRecord() {
 
   // 收集食物选择
   const foods = window.foodSelections || {};
+  // 收集活动细节
+  const activityDetails = window.activityDetails || {};
 
   if (selectedActivities.length === 0) {
     showToast(`${t('tip')}: ${t('please_select_activity')}`);
@@ -971,6 +1275,7 @@ function handleSaveRecord() {
         activities: selectedActivities,
         locations: locations,
         foods: foods,
+        activityDetails: activityDetails,
         mood: mood,
         notes: notes
       };
@@ -998,6 +1303,9 @@ function handleSaveRecord() {
         // 合并食物
         const mergedFoods = { ...existingEntry.foods, ...foods };
         
+        // 合并活动细节
+        const mergedActivityDetails = { ...existingEntry.activityDetails, ...activityDetails };
+        
         // 合并备注
         const mergedNotes = existingEntry.notes ? `${existingEntry.notes}\n${notes}` : notes;
         
@@ -1008,6 +1316,7 @@ function handleSaveRecord() {
           activities: mergedActivities,
           locations: mergedLocations.length > 0 ? mergedLocations : null,
           foods: mergedFoods,
+          activityDetails: mergedActivityDetails,
           mood: mood, // 使用新的心情
           notes: mergedNotes
         };
@@ -1022,6 +1331,7 @@ function handleSaveRecord() {
           activities: selectedActivities,
           locations: locations,
           foods: foods,
+          activityDetails: activityDetails,
           mood: mood,
           notes: notes
         };
@@ -1042,6 +1352,9 @@ function handleSaveRecord() {
     // 合并食物
     const mergedFoods = { ...existingEntry.foods, ...foods };
     
+    // 合并活动细节
+    const mergedActivityDetails = { ...existingEntry.activityDetails, ...activityDetails };
+    
     // 合并备注
     const mergedNotes = existingEntry.notes ? `${existingEntry.notes}\n${notes}` : notes;
     
@@ -1052,6 +1365,7 @@ function handleSaveRecord() {
       activities: mergedActivities,
       locations: mergedLocations.length > 0 ? mergedLocations : null,
       foods: mergedFoods,
+      activityDetails: mergedActivityDetails,
       mood: mood, // 使用新的心情
       notes: mergedNotes
     };
@@ -1063,6 +1377,7 @@ function handleSaveRecord() {
       activities: selectedActivities,
       locations: locations,
       foods: foods,
+      activityDetails: activityDetails,
       mood: mood,
       notes: notes
     };
@@ -1071,12 +1386,16 @@ function handleSaveRecord() {
 
   saveDiaryEntries();
   editingEntryId = null;
+  showEditPage = false;
   window.foodSelections = {};
+  window.activityDetails = {};
   window.activitySelections = [];
   window.locationSelection = '';
   window.recordDate = null;
   showToast(t('record_saved'));
-  renderRecordTab();
+  // 如果是编辑模式，跳转到数据界面
+  currentTab = 'data';
+  renderCurrentTab();
 }
 
 // 时间段筛选变量
@@ -1127,12 +1446,12 @@ function renderAnalysisTab() {
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h2>${t('analysis')}</h2>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-          <button class="btn ${currentTimeRange === 'all' ? 'btn-primary' : 'btn-secondary'}" onclick="setTimeRange('all')">全部</button>
-          <button class="btn ${currentTimeRange === '7days' ? 'btn-primary' : 'btn-secondary'}" onclick="setTimeRange('7days')">最近七天</button>
-          <button class="btn ${currentTimeRange === 'week' ? 'btn-primary' : 'btn-secondary'}" onclick="setTimeRange('week')">本周</button>
-          <button class="btn ${currentTimeRange === 'month' ? 'btn-primary' : 'btn-secondary'}" onclick="setTimeRange('month')">本月</button>
+          <button class="btn ${currentTimeRange === 'all' ? 'btn-primary' : 'btn-secondary'}" onclick="setTimeRange('all')">${t('all')}</button>
+          <button class="btn ${currentTimeRange === '7days' ? 'btn-primary' : 'btn-secondary'}" onclick="setTimeRange('7days')">${t('last_7_days')}</button>
+          <button class="btn ${currentTimeRange === 'week' ? 'btn-primary' : 'btn-secondary'}" onclick="setTimeRange('week')">${t('week')}</button>
+          <button class="btn ${currentTimeRange === 'month' ? 'btn-primary' : 'btn-secondary'}" onclick="setTimeRange('month')">${t('month')}</button>
           <button class="btn ${currentTimeRange === 'lastMonth' ? 'btn-primary' : 'btn-secondary'}" onclick="setTimeRange('lastMonth')">上月</button>
-          <button class="btn ${currentTimeRange === 'custom' ? 'btn-primary' : 'btn-secondary'}" onclick="openCustomTimeRange()">自定义</button>
+          <button class="btn ${currentTimeRange === 'custom' ? 'btn-primary' : 'btn-secondary'}" onclick="openCustomTimeRange()">${t('custom')}</button>
           <input type="date" class="form-input" id="custom-start-date" style="width: 140px; display: none;" placeholder="开始日期">
           <input type="date" class="form-input" id="custom-end-date" style="width: 140px; display: none;" placeholder="结束日期">
           <button class="btn btn-primary" onclick="applyCustomDateRange()" style="display: none;" id="apply-custom-date">应用</button>
@@ -1166,13 +1485,13 @@ function renderAnalysisTab() {
       </div>
     </div>
     <div class="card">
-      <h3>心情趋势</h3>
+      <h3>${t('mood_trend')}</h3>
       <div class="chart-container" id="mood-trend-chart">
         <!-- 折线图将通过 Canvas 绘制 -->
       </div>
     </div>
     <div class="card">
-      <h3>活动分析</h3>
+      <h3>${t('activity_analysis')}</h3>
       <div class="chart-container" id="activity-chart">
         <!-- 饼状图将通过 Canvas 绘制 -->
       </div>
@@ -1181,7 +1500,7 @@ function renderAnalysisTab() {
       </div>
     </div>
     <div class="card">
-      <h3>地点分析</h3>
+      <h3>${t('location_analysis')}</h3>
       <div class="chart-container" id="location-chart">
         <!-- 饼状图将通过 Canvas 绘制 -->
       </div>
@@ -1189,11 +1508,9 @@ function renderAnalysisTab() {
         <!-- 横向条形图将通过 Canvas 绘制 -->
       </div>
     </div>
-    <div class="card">
-      <h3>饮食分析</h3>
-      <div class="chart-container" id="food-bar-chart">
-        <!-- 横向条形图将通过 Canvas 绘制 -->
-      </div>
+    <div class="card" id="food-bar-chart">
+      <h3>${t('food_analysis')}</h3>
+      <!-- 横向条形图将通过 Canvas 绘制 -->
     </div>
   `;
 
@@ -1677,30 +1994,53 @@ function renderDataTab() {
     markedDates[dateStr].moods.push(entry.mood);
   });
 
+  // 根据颜色方案和心情分数获取颜色
+  function getColorByMood(mood, colorScheme) {
+    switch (colorScheme) {
+      case 'blue':
+        switch (mood) {
+          case 1: return 'rgb(0, 0, 139)'; // 深蓝色
+          case 2: return 'rgb(0, 0, 205)'; // 蓝色
+          case 3: return 'rgb(50, 50, 255)'; // 浅蓝色
+          case 4: return 'rgb(100, 100, 255)'; // 淡蓝色
+          case 5: return 'rgb(150, 150, 255)'; // 极浅蓝色
+          default: return 'rgb(200, 200, 200)'; // 默认灰色
+        }
+      case 'green':
+        switch (mood) {
+          case 1: return 'rgb(0, 100, 0)'; // 深绿色
+          case 2: return 'rgb(0, 139, 0)'; // 绿色
+          case 3: return 'rgb(50, 205, 50)'; // 浅绿色
+          case 4: return 'rgb(100, 255, 100)'; // 淡绿色
+          case 5: return 'rgb(150, 255, 150)'; // 极浅绿色
+          default: return 'rgb(200, 200, 200)'; // 默认灰色
+        }
+      case 'yellow':
+        switch (mood) {
+          case 1: return 'rgb(139, 100, 0)'; // 深黄色
+          case 2: return 'rgb(165, 120, 0)'; // 黄色
+          case 3: return 'rgb(205, 160, 50)'; // 浅黄色
+          case 4: return 'rgb(255, 200, 100)'; // 淡黄色
+          case 5: return 'rgb(255, 220, 150)'; // 极浅黄色
+          default: return 'rgb(200, 200, 200)'; // 默认灰色
+        }
+      default: // 红色系
+        switch (mood) {
+          case 1: return 'rgb(139, 0, 0)'; // 深红色
+          case 2: return 'rgb(205, 0, 0)'; // 红色
+          case 3: return 'rgb(255, 50, 50)'; // 浅红色
+          case 4: return 'rgb(255, 100, 100)'; // 淡红色
+          case 5: return 'rgb(255, 150, 150)'; // 粉红色
+          default: return 'rgb(200, 200, 200)'; // 默认灰色
+        }
+    }
+  }
+
   // 计算每天的平均心情并设置颜色
   Object.keys(markedDates).forEach(date => {
     const avgMood = markedDates[date].moods.reduce((sum, mood) => sum + mood, 0) / markedDates[date].moods.length;
-    
-    let color;
-    switch (Math.round(avgMood)) {
-      case 1:
-        color = 'rgb(139, 0, 0)'; // 深红色
-        break;
-      case 2:
-        color = 'rgb(205, 0, 0)'; // 红色
-        break;
-      case 3:
-        color = 'rgb(255, 50, 50)'; // 浅红色
-        break;
-      case 4:
-        color = 'rgb(255, 100, 100)'; // 淡红色
-        break;
-      case 5:
-        color = 'rgb(255, 150, 150)'; // 粉红色
-        break;
-      default:
-        color = 'rgb(200, 200, 200)'; // 默认灰色
-    }
+    const colorScheme = settings.colorScheme || 'red';
+    const color = getColorByMood(Math.round(avgMood), colorScheme);
 
     markedDates[date] = {
       ...markedDates[date],
@@ -1717,7 +2057,11 @@ function renderDataTab() {
     entriesHtml = `<div class="empty-state">${t('no_records')}</div>`;
   } else {
     entriesHtml = sortedEntries.map(entry => {
-      const activityNames = entry.activities.map(id => activities.find(a => a.id == id)?.name).filter(Boolean).join(', ');
+      const activityNames = entry.activities.map(id => {
+        const activity = activities.find(a => a.id == id);
+        const detail = entry.activityDetails && entry.activityDetails[id] ? ` (${entry.activityDetails[id]})` : '';
+        return activity ? `${activity.name}${detail}` : '';
+      }).filter(Boolean).join(', ');
       const locationNames = Array.isArray(entry.locations) ? entry.locations.map(id => locations.find(l => l.id == id)?.name).filter(Boolean).join(', ') : (entry.location ? locations.find(l => l.id == entry.location)?.name : '-');
       const foodNames = Object.values(entry.foods).filter(Boolean).join(', ');
       const moodEmojis = ['😢', '😔', '😐', '😊', '😄'];
@@ -1795,7 +2139,7 @@ function renderCalendar() {
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   
   // 渲染星期标题
-  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+  const weekdays = [t('sunday'), t('monday'), t('tuesday'), t('wednesday'), t('thursday'), t('friday'), t('saturday')];
   let weekdaysHtml = '';
   weekdays.forEach(day => {
     weekdaysHtml += `<div class="calendar-weekday">${day}</div>`;
@@ -1904,13 +2248,35 @@ function renderSettingsTab() {
             <option value="dark" ${currentTheme === 'dark' ? 'selected' : ''}>${t('dark_mode')}</option>
           </select>
         </div>
+        <div class="form-group">
+          <label class="form-label">日历颜色方案</label>
+          <select class="form-input" id="color-scheme-select">
+            <option value="red" ${settings.colorScheme === 'red' ? 'selected' : ''}>红色系</option>
+            <option value="blue" ${settings.colorScheme === 'blue' ? 'selected' : ''}>蓝色系</option>
+            <option value="green" ${settings.colorScheme === 'green' ? 'selected' : ''}>绿色系</option>
+            <option value="yellow" ${settings.colorScheme === 'yellow' ? 'selected' : ''}>黄色系</option>
+          </select>
+        </div>
+
+      </div>
+      <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <a href="https://github.com/Eileen5790/kouji3" target="_blank" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: var(--card-background); border-radius: var(--corner-radius); text-decoration: none; color: var(--text-primary);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>GitHub 仓库</span>
+        </a>
+        <a href="https://qm.qq.com/q/BrNjZ2mD9C" target="_blank" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: var(--card-background); border-radius: var(--corner-radius); text-decoration: none; color: var(--text-primary);">
+          <span style="font-size: 24px;">🐧</span>
+          <span>QQ 交流群</span>
+        </a>
       </div>
       <div class="settings-buttons-container">
-        <button class="btn btn-primary settings-button" id="manage-activities">活动管理</button>
-        <button class="btn btn-primary settings-button" id="manage-locations">地点管理</button>
-        <button class="btn btn-primary settings-button" id="manage-foods">饮食管理</button>
-        <button class="btn btn-primary settings-button" id="manage-data">数据管理</button>
-        <button class="btn btn-primary settings-button" id="manage-about">关于</button>
+        <button class="btn btn-primary settings-button" id="manage-activities">${t('manage_activities')}</button>
+        <button class="btn btn-primary settings-button" id="manage-locations">${t('manage_locations')}</button>
+        <button class="btn btn-primary settings-button" id="manage-foods">${t('manage_foods')}</button>
+        <button class="btn btn-primary settings-button" id="manage-data">${t('manage_data')}</button>
+        <button class="btn btn-primary settings-button" id="manage-about">${t('manage_about')}</button>
       </div>
     `;
 
@@ -1928,6 +2294,15 @@ function renderSettingsTab() {
       settings.theme = currentTheme;
       saveSettings();
       applyTheme();
+      renderSettingsTab();
+    });
+    
+    // 绑定颜色方案选择事件
+    document.getElementById('color-scheme-select').addEventListener('change', (e) => {
+      const colorScheme = e.target.value;
+      settings.colorScheme = colorScheme;
+      saveSettings();
+      showToast(`颜色方案已更改为${colorScheme === 'red' ? '红色系' : colorScheme === 'blue' ? '蓝色系' : colorScheme === 'green' ? '绿色系' : '黄色系'}`);
       renderSettingsTab();
     });
     
@@ -2001,16 +2376,43 @@ function renderDataManagement() {
       </div>
       <div class="form-group">
         <h3>导出数据</h3>
-        <button class="btn btn-primary" id="export-excel" style="width: 100%; margin-bottom: 8px;">导出为Excel格式</button>
+        <!-- 日期选择器 -->
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <div style="flex: 1;">
+            <label class="form-label">开始日期</label>
+            <input type="date" class="form-input" id="export-start-date">
+          </div>
+          <div style="flex: 1;">
+            <label class="form-label">结束日期</label>
+            <input type="date" class="form-input" id="export-end-date">
+          </div>
+        </div>
         <button class="btn btn-secondary" id="export-csv" style="width: 100%; margin-bottom: 8px;">导出为CSV格式</button>
-        <button class="btn btn-secondary" id="export-clipboard" style="width: 100%; margin-bottom: 8px;">复制到剪贴板</button>
         <button class="btn btn-secondary" id="export-json" style="width: 100%; margin-bottom: 8px;">导出为JSON格式</button>
+        
+        <!-- 日记记录导出容器 -->
+        <div style="margin-top: 16px; padding: 12px; background: var(--card-background); border-radius: var(--corner-radius);">
+          <h4 style="margin-top: 0; margin-bottom: 8px;">日记记录导出（复制到剪贴板）</h4>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary" id="export-clipboard-records-md" style="flex: 1;">复制MD格式</button>
+            <button class="btn btn-secondary" id="export-clipboard-records-json" style="flex: 1;">复制JSON格式</button>
+          </div>
+        </div>
+        
+        <!-- 管理数据导出容器 -->
+        <div style="margin-top: 16px; padding: 12px; background: var(--card-background); border-radius: var(--corner-radius);">
+          <h4 style="margin-top: 0; margin-bottom: 8px;">管理数据导出（复制到剪贴板）</h4>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary" id="export-clipboard-settings-md" style="flex: 1;">复制MD格式</button>
+            <button class="btn btn-secondary" id="export-clipboard-settings-json" style="flex: 1;">复制JSON格式</button>
+          </div>
+        </div>
       </div>
       <div class="form-group">
         <h3>导入数据</h3>
-        <input type="file" id="file-input" accept=".json" style="display: none;">
+        <input type="file" id="file-input" accept=".json,.csv" style="display: none;">
         <button class="btn btn-secondary" id="file-import-btn" style="width: 100%; margin-bottom: 8px;">📁 导入数据 (文件)</button>
-        <button class="btn btn-secondary" id="clipboard-import-btn" style="width: 100%; margin-bottom: 8px;">📋 从剪贴板导入</button>
+        <button class="btn btn-secondary" id="clipboard-import-btn" style="width: 100%; margin-bottom: 8px;">📋 从剪贴板导入（仅支持JSON格式）</button>
         <button class="btn btn-danger" id="reset-settings-btn" style="width: 100%;">🔄 初始化设置</button>
       </div>
     </div>
@@ -2023,10 +2425,16 @@ function renderDataManagement() {
   });
   
   // 绑定导出数据事件
-  document.getElementById('export-excel').addEventListener('click', () => exportData('excel'));
   document.getElementById('export-csv').addEventListener('click', () => exportData('csv'));
-  document.getElementById('export-clipboard').addEventListener('click', () => exportData('clipboard'));
   document.getElementById('export-json').addEventListener('click', () => exportData('json'));
+  
+  // 绑定日记记录导出事件
+  document.getElementById('export-clipboard-records-md').addEventListener('click', () => exportRecordsToClipboard());
+  document.getElementById('export-clipboard-records-json').addEventListener('click', () => exportRecordsToClipboardJson());
+  
+  // 绑定管理数据导出事件
+  document.getElementById('export-clipboard-settings-md').addEventListener('click', () => exportSettingsToClipboard());
+  document.getElementById('export-clipboard-settings-json').addEventListener('click', () => exportSettingsToClipboardJson());
   
   // 绑定导入数据事件
   document.getElementById('file-import-btn').addEventListener('click', () => {
@@ -2083,20 +2491,35 @@ function renderActivitiesManagement() {
         </div>
       </div>
       <div id="activities-list">
-        ${activities.map(activity => `
-          <div class="list-item">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div style="display: flex; align-items: center;">
-                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 6px; background-color: ${activity.color}; margin-right: 8px;"></span>
-                <span>${activity.name}</span>
+        ${activities.map(activity => {
+          const subcategories = activitySubcategories.filter(sub => sub.activityId === activity.id);
+          return `
+            <div style="margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" class="activity-category-header" data-category="${activity.id}">
+                <div style="display: flex; align-items: center;">
+                  <span style="display: inline-block; width: 12px; height: 12px; border-radius: 6px; background-color: ${activity.color}; margin-right: 8px;"></span>
+                  <h4>${activity.name}</h4>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <button class="btn btn-secondary" onclick="editActivity(${activity.id})">🖊</button>
+                  <button class="btn btn-danger" onclick="deleteActivity(${activity.id})">🗑️</button>
+                  <span class="category-toggle">▼</span>
+                </div>
               </div>
-              <div style="display: flex; gap: 8px;">
-                <button class="btn btn-secondary" onclick="editActivity(${activity.id})">🖊</button>
-                <button class="btn btn-danger" onclick="deleteActivity(${activity.id})">🗑️</button>
+              <div class="activity-category-content" id="category-${activity.id}">
+                ${subcategories.map(subcategory => `
+                  <div class="list-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <span>${subcategory.name}</span>
+                      <button class="btn btn-danger" onclick="deleteActivitySubcategory(${subcategory.id})">🗑️</button>
+                    </div>
+                  </div>
+                `).join('')}
+
               </div>
             </div>
-          </div>
-        `).join('')}
+          `;
+        }).join('')}
       </div>
     </div>
   `;
@@ -2136,6 +2559,23 @@ function renderActivitiesManagement() {
   } else {
     console.error('保存按钮未找到');
   }
+  
+  // 绑定分类收起/展开事件
+  document.querySelectorAll('.activity-category-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const categoryId = header.dataset.category;
+      const content = document.getElementById(`category-${categoryId}`);
+      const toggle = header.querySelector('.category-toggle');
+      
+      if (content.style.display === 'none') {
+        content.style.display = 'block';
+        toggle.textContent = '▼';
+      } else {
+        content.style.display = 'none';
+        toggle.textContent = '▶';
+      }
+    });
+  });
 }
 
 // 渲染地点管理页面
@@ -2197,11 +2637,11 @@ function renderFoodsManagement() {
                   </div>
                 </div>
               `).join('')}
-              <button class="btn btn-secondary" style="margin-top: 8px;" onclick="addFood(${category.id})"><${t('add_food')}</button>
+
             </div>
           </div>
         `).join('')}
-        <button class="btn btn-primary" style="margin-top: 16px;" onclick="addFoodCategory()">${t('add_food_category')}</button>
+
       </div>
     </div>
   `;
@@ -2232,38 +2672,99 @@ function renderFoodsManagement() {
 
 // 导出数据
 // 通用导出工具函数
-function generateExportData(type, includeSettings = false) {
+function generateExportData(type, includeSettings = false, startDate = null, endDate = null) {
+  let filteredEntries = diaryEntries;
+  
+  // 根据日期范围过滤记录
+  if (startDate || endDate) {
+    filteredEntries = diaryEntries.filter(entry => {
+      const entryDate = new Date(entry.date);
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+      
+      // 设置结束日期为当天的最后一刻
+      if (end) {
+        end.setHours(23, 59, 59, 999);
+      }
+      
+      if (start && end) {
+        return entryDate >= start && entryDate <= end;
+      } else if (start) {
+        return entryDate >= start;
+      } else if (end) {
+        return entryDate <= end;
+      } else {
+        return true;
+      }
+    });
+  }
+  
   const exportData = {
     version: '1.0',
     exportDate: new Date().toISOString(),
     type: type,
-    diaryEntries: type === 'settings' ? [] : diaryEntries,
-    activities: activities,
-    locations: locations,
-    foodCategories: foodCategories,
-    foods: foods
+    diaryEntries: type === 'settings' ? [] : filteredEntries
   };
   
   if (includeSettings) {
     exportData.settings = settings;
+    exportData.activities = activities;
+    exportData.activitySubcategories = activitySubcategories;
+    exportData.locations = locations;
+    exportData.foodCategories = foodCategories;
+    exportData.foods = foods;
   }
   
   return exportData;
 }
 
 // 生成CSV格式数据
-function generateCSVData() {
+function generateCSVData(startDate = null, endDate = null) {
+  // 根据日期范围过滤记录
+  let filteredEntries = diaryEntries;
+  if (startDate || endDate) {
+    filteredEntries = diaryEntries.filter(entry => {
+      const entryDate = new Date(entry.date);
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+      
+      // 设置结束日期为当天的最后一刻
+      if (end) {
+        end.setHours(23, 59, 59, 999);
+      }
+      
+      if (start && end) {
+        return entryDate >= start && entryDate <= end;
+      } else if (start) {
+        return entryDate >= start;
+      } else if (end) {
+        return entryDate <= end;
+      } else {
+        return true;
+      }
+    });
+  }
+  
   const headers = ['ID', '日期', '活动', '地点', '食物', '心情', '备注'];
   let csvContent = headers.join(',') + '\n';
   
-  diaryEntries.forEach((entry, index) => {
-    const activitiesNames = entry.activities.map(id => {
+  filteredEntries.forEach((entry, index) => {
+    // 活动和活动详情
+    const activitiesWithDetails = entry.activities.map(id => {
       const activity = activities.find(a => a.id === id);
-      return activity ? activity.name : '';
+      if (!activity) return '';
+      
+      const detail = entry.activityDetails ? entry.activityDetails[id] : '';
+      return detail ? `${activity.name}(${detail})` : activity.name;
     }).join('; ');
     
-    const locationName = entry.location ? locations.find(l => l.id === entry.location)?.name || '' : '';
+    // 地点
+    const locationNames = entry.locations ? entry.locations.map(id => {
+      const location = locations.find(l => l.id === id);
+      return location ? location.name : '';
+    }).join('; ') : '';
     
+    // 食物
     const foodsNames = Object.entries(entry.foods).map(([categoryId, foodName]) => {
       const category = foodCategories.find(c => c.id == categoryId);
       return category ? `${category.name}: ${foodName}` : foodName;
@@ -2272,8 +2773,8 @@ function generateCSVData() {
     const row = [
       index + 1,
       new Date(entry.date).toLocaleDateString(),
-      activitiesNames,
-      locationName,
+      activitiesWithDetails,
+      locationNames,
       foodsNames,
       entry.mood,
       (entry.notes || '').replace(/"/g, '""')
@@ -2289,18 +2790,18 @@ function generateCSVData() {
 }
 
 // 生成导出数据Blob
-function getDataBlob(format = 'json', type = 'full', includeSettings = false) {
+function getDataBlob(format = 'json', type = 'full', includeSettings = false, startDate = null, endDate = null) {
   let data;
   
   if (format === 'json') {
-    const exportData = generateExportData(type, includeSettings);
+    const exportData = generateExportData(type, includeSettings, startDate, endDate);
     data = {
       blob: new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' }),
       ext: 'json',
       mimeType: 'application/json'
     };
   } else if (format === 'csv' || format === 'excel') {
-    data = generateCSVData();
+    data = generateCSVData(startDate, endDate);
   }
   
   return data;
@@ -2309,9 +2810,13 @@ function getDataBlob(format = 'json', type = 'full', includeSettings = false) {
 function exportData(format = 'json') {
   const dateStr = new Date().toISOString().slice(0,10);
   
+  // 获取日期选择器的值
+  const startDate = document.getElementById('export-start-date')?.value;
+  const endDate = document.getElementById('export-end-date')?.value;
+  
   if (format === 'clipboard') {
     // 复制到剪贴板
-    const exportData = generateExportData('full', true);
+    const exportData = generateExportData('full', true, startDate, endDate);
     const jsonString = JSON.stringify(exportData, null, 2);
     
     navigator.clipboard.writeText(jsonString)
@@ -2324,19 +2829,200 @@ function exportData(format = 'json') {
       });
   } else if (format === 'excel') {
     // 导出为Excel格式
-    const data = getDataBlob('csv');
+    const data = getDataBlob('csv', 'full', true, startDate, endDate);
     if (data) {
-      downloadFile(data.blob, `kouji-data-${dateStr}.xlsx`);
+      downloadFile(data.blob, `kouji-data-${dateStr}.csv`);
       showToast(t('export_success'));
     }
   } else {
     // 导出为JSON或CSV格式
-    const data = getDataBlob(format, 'full', true);
+    const data = getDataBlob(format, 'full', true, startDate, endDate);
     if (data) {
       downloadFile(data.blob, `kouji-data-${dateStr}.${data.ext}`);
       showToast(t('export_success'));
     }
   }
+}
+
+// 导出日记记录到剪贴板
+function exportRecordsToClipboard() {
+  let recordsText = '### 日记记录\n';
+  
+  if (diaryEntries.length === 0) {
+    recordsText += '暂无日记记录\n';
+  } else {
+    diaryEntries.forEach((entry, index) => {
+      const date = new Date(entry.date).toLocaleDateString();
+      recordsText += `${index + 1}. ${date} ：\n\n`;
+      
+      // 活动
+      if (entry.activities && entry.activities.length > 0) {
+        const activityNames = entry.activities.map(id => {
+          const activity = activities.find(a => a.id === id);
+          return activity ? activity.name : '';
+        }).join('、');
+        recordsText += `    - 活动：${activityNames}\n`;
+      } else {
+        recordsText += `    - 活动：无\n`;
+      }
+      
+      // 地点
+      if (entry.locations && entry.locations.length > 0) {
+        const locationNames = entry.locations.map(id => {
+          const location = locations.find(l => l.id === id);
+          return location ? location.name : '';
+        }).join('、');
+        recordsText += `    - 地点：${locationNames}\n`;
+      } else {
+        recordsText += `    - 地点：无\n`;
+      }
+      
+      // 食物
+      if (entry.foods && Object.keys(entry.foods).length > 0) {
+        const foodText = Object.entries(entry.foods).map(([categoryId, foodName]) => {
+          const category = foodCategories.find(c => c.id == categoryId);
+          return category ? `${category.name}：${foodName}` : foodName;
+        }).join('、');
+        recordsText += `    - 食物：${foodText}\n`;
+      } else {
+        recordsText += `    - 食物：无\n`;
+      }
+      
+      // 活动详情
+      if (entry.activityDetails && Object.keys(entry.activityDetails).length > 0) {
+        const detailText = Object.entries(entry.activityDetails).map(([activityId, details]) => {
+          const activity = activities.find(a => a.id == activityId);
+          return activity ? `${activity.name}（${details}）` : details;
+        }).join('、');
+        recordsText += `    - 活动详情：${detailText}\n`;
+      } else {
+        recordsText += `    - 活动详情：无\n`;
+      }
+      
+      // 心情
+      const moodMap = {
+        1: '低落',
+        2: '一般',
+        3: '中性',
+        4: '愉快',
+        5: '高兴'
+      };
+      recordsText += `    - 心情：${entry.mood}（${moodMap[entry.mood] || '未知'}）\n`;
+      
+      // 备注
+      recordsText += `    - 备注：${entry.notes || '无'}\n\n`;
+    });
+  }
+  
+  navigator.clipboard.writeText(recordsText)
+    .then(() => {
+      showToast('日记记录已复制到剪贴板');
+    })
+    .catch(err => {
+      console.error('复制失败:', err);
+      showToast('复制失败，请手动复制');
+    });
+}
+
+// 导出管理数据到剪贴板
+function exportSettingsToClipboard() {
+  let settingsText = '### 应用设置\n';
+  settingsText += `- 语言 ：${settings.language === 'zh' ? '中文' : 'English'}\n`;
+  settingsText += `- 主题 ：${settings.theme === 'light' ? '浅色' : '深色'}\n\n`;
+  
+  // 活动管理
+  settingsText += '### 活动管理\n';
+  settingsText += '- 活动列表 ：\n\n';
+  activities.forEach(activity => {
+    settingsText += `  - ${activity.name}（颜色：${activity.color}）\n`;
+  });
+  
+  settingsText += '- 活动子类别 ：\n\n';
+  activities.forEach(activity => {
+    const subs = activitySubcategories.filter(sub => sub.activityId === activity.id);
+    if (subs.length > 0) {
+      const subNames = subs.map(sub => sub.name).join('、');
+      settingsText += `  - ${activity.name}：${subNames}\n`;
+    }
+  });
+  
+  // 地点管理
+  settingsText += '\n### 地点管理\n';
+  locations.forEach(location => {
+    settingsText += `- ${location.name}（颜色：${location.color}）\n`;
+  });
+  
+  // 食物管理
+  settingsText += '\n### 食物管理\n';
+  settingsText += '- 食物类别 ：\n\n';
+  foodCategories.forEach(category => {
+    settingsText += `  - ${category.name}（颜色：${category.color}）\n`;
+  });
+  
+  settingsText += '- 食物列表 ：\n\n';
+  foodCategories.forEach(category => {
+    const categoryFoods = foods.filter(food => food.categoryId === category.id);
+    if (categoryFoods.length > 0) {
+      const foodNames = categoryFoods.map(food => food.name).join('、');
+      settingsText += `  - ${category.name}：${foodNames}\n`;
+    }
+  });
+  
+  navigator.clipboard.writeText(settingsText)
+    .then(() => {
+      showToast('管理数据已复制到剪贴板');
+    })
+    .catch(err => {
+      console.error('复制失败:', err);
+      showToast('复制失败，请手动复制');
+    });
+}
+
+// 导出日记记录为JSON格式到剪贴板
+function exportRecordsToClipboardJson() {
+  const recordsData = {
+    version: '1.0',
+    exportDate: new Date().toISOString(),
+    type: 'records',
+    diaryEntries: diaryEntries
+  };
+  
+  const jsonString = JSON.stringify(recordsData, null, 2);
+  
+  navigator.clipboard.writeText(jsonString)
+    .then(() => {
+      showToast('日记记录（JSON格式）已复制到剪贴板');
+    })
+    .catch(err => {
+      console.error('复制失败:', err);
+      showToast('复制失败，请手动复制');
+    });
+}
+
+// 导出管理数据为JSON格式到剪贴板
+function exportSettingsToClipboardJson() {
+  const settingsData = {
+    version: '1.0',
+    exportDate: new Date().toISOString(),
+    type: 'settings',
+    settings: settings,
+    activities: activities,
+    activitySubcategories: activitySubcategories,
+    locations: locations,
+    foodCategories: foodCategories,
+    foods: foods
+  };
+  
+  const jsonString = JSON.stringify(settingsData, null, 2);
+  
+  navigator.clipboard.writeText(jsonString)
+    .then(() => {
+      showToast('管理数据（JSON格式）已复制到剪贴板');
+    })
+    .catch(err => {
+      console.error('复制失败:', err);
+      showToast('复制失败，请手动复制');
+    });
 }
 
 function exportSettings(format = 'json') {
@@ -2381,80 +3067,383 @@ function importData(e) {
   }
 }
 
+// 解析CSV文件
+function parseCSVData(csvText) {
+  // 更可靠的CSV解析函数
+  function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    
+    result.push(current);
+    return result;
+  }
+  
+  const lines = csvText.trim().split('\n');
+  const headers = parseCSVLine(lines[0]).map(header => header.replace(/"/g, ''));
+  const entries = [];
+  
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    const values = parseCSVLine(line).map(value => value.replace(/"/g, ''));
+    // 确保数组长度足够
+    while (values.length < 7) {
+      values.push('');
+    }
+    
+    const entry = {
+      id: Date.now() + i,
+      date: new Date(values[1]).toISOString(),
+      activities: [],
+      locations: [],
+      foods: {},
+      activityDetails: {},
+      mood: parseInt(values[5]) || 3,
+      notes: values[6] || ''
+    };
+    
+    // 解析活动和活动详情
+    if (values[2]) {
+      const activitiesWithDetails = values[2].split('; ');
+      activitiesWithDetails.forEach(activityWithDetail => {
+        const match = activityWithDetail.match(/^(.*?)\((.*?)\)$/);
+        if (match) {
+          const activityName = match[1];
+          const detail = match[2];
+          
+          let activity = activities.find(a => a.name === activityName);
+          if (!activity) {
+            activity = {
+              id: Date.now() + i,
+              name: activityName,
+              color: getRandomColor()
+            };
+            activities.push(activity);
+          }
+          entry.activities.push(activity.id);
+          if (detail) {
+            entry.activityDetails[activity.id] = detail;
+            
+            // 提取子类别
+            const subcategories = detail.split(',').map(s => s.trim());
+            subcategories.forEach(subName => {
+              if (subName) {
+                const existingSub = activitySubcategories.find(sub => sub.activityId === activity.id && sub.name === subName);
+                if (!existingSub) {
+                  const newSubcategory = {
+                    id: Date.now() + i + subName.length,
+                    activityId: activity.id,
+                    name: subName
+                  };
+                  activitySubcategories.push(newSubcategory);
+                }
+              }
+            });
+          }
+        } else {
+          // 这是活动
+          const activityName = activityWithDetail;
+          let activity = activities.find(a => a.name === activityName);
+          if (!activity) {
+            activity = {
+              id: Date.now() + i,
+              name: activityName,
+              color: getRandomColor()
+            };
+            activities.push(activity);
+          }
+          entry.activities.push(activity.id);
+        }
+      });
+    }
+    
+    // 解析地点
+    if (values[3]) {
+      const locationNames = values[3].split('; ');
+      locationNames.forEach(locationName => {
+        // 跳过空的地点名称
+        if (locationName.trim()) {
+          let location = locations.find(l => l.name === locationName);
+          if (!location) {
+            location = {
+              id: Date.now() + i,
+              name: locationName,
+              color: getRandomColor()
+            };
+            locations.push(location);
+          }
+          entry.locations.push(location.id);
+        }
+      });
+    }
+    
+    // 解析食物
+    if (values[4]) {
+      const foodItems = values[4].split('; ');
+      foodItems.forEach(foodItem => {
+        const match = foodItem.match(/^(.*?): (.*)$/);
+        if (match) {
+          const categoryName = match[1];
+          const foodNames = match[2].split(', ');
+          
+          let category = foodCategories.find(c => c.name === categoryName);
+          if (!category) {
+            category = {
+              id: Date.now() + i,
+              name: categoryName,
+              color: getRandomColor()
+            };
+            foodCategories.push(category);
+          }
+          
+          entry.foods[category.id] = foodNames.join(', ');
+          
+          foodNames.forEach(foodName => {
+            if (!foods.find(f => f.name === foodName && f.categoryId === category.id)) {
+              const newFood = {
+                id: Date.now() + i + foodName.length,
+                name: foodName,
+                categoryId: category.id
+              };
+              foods.push(newFood);
+            }
+          });
+        }
+      });
+    }
+    
+    entries.push(entry);
+  }
+  
+  return entries;
+}
+
 function importFromFile(file, e) {
   const reader = new FileReader();
   reader.onload = (event) => {
     try {
-      const data = JSON.parse(event.target.result);
+      const fileExtension = file.name.split('.').pop().toLowerCase();
       
-      if (data.type === 'settings') {
+      if (fileExtension === 'json') {
+        // 解析JSON文件
+        const data = JSON.parse(event.target.result);
+        
+        if (data.type === 'settings') {
+          if (!confirm(t('import_confirm'))) {
+            if (e) e.target.value = '';
+            return;
+          }
+          
+          if (data.settings) {
+            settings = data.settings;
+            saveSettings();
+          }
+          if (data.activities) {
+            activities = data.activities;
+            saveActivities();
+          }
+          if (data.activitySubcategories) {
+            activitySubcategories = data.activitySubcategories;
+            localStorage.setItem('activitySubcategories', JSON.stringify(activitySubcategories));
+          }
+          if (data.locations) {
+            locations = data.locations;
+            saveLocations();
+          }
+          if (data.foodCategories) {
+            foodCategories = data.foodCategories;
+            saveFoodCategories();
+          }
+          if (data.foods) {
+            foods = data.foods;
+            saveFoods();
+          }
+        } else if (data.type === 'records' || data.type === 'full') {
+          if (!confirm(t('import_confirm'))) {
+            if (e) e.target.value = '';
+            return;
+          }
+          
+          if (data.diaryEntries) {
+            diaryEntries = data.diaryEntries;
+            saveDiaryEntries();
+          }
+          
+          // 提取并添加新的活动、地点、食物和子类别
+          if (data.diaryEntries) {
+            data.diaryEntries.forEach(entry => {
+              // 处理活动
+              if (entry.activities) {
+                entry.activities.forEach(activityId => {
+                  // 检查活动是否已存在
+                  const existingActivity = activities.find(a => a.id === activityId);
+                  if (!existingActivity) {
+                    const newActivity = {
+                      id: activityId,
+                      name: `活动${activityId}`,
+                      color: getRandomColor()
+                    };
+                    activities.push(newActivity);
+                  }
+                });
+              }
+              
+              // 处理活动细节（子类别）
+              if (entry.activityDetails) {
+                Object.entries(entry.activityDetails).forEach(([activityId, details]) => {
+                  const activityIdNum = parseInt(activityId);
+                  // 检查活动是否已存在
+                  const existingActivity = activities.find(a => a.id === activityIdNum);
+                  if (!existingActivity) {
+                    const newActivity = {
+                      id: activityIdNum,
+                      name: `活动${activityIdNum}`,
+                      color: getRandomColor()
+                    };
+                    activities.push(newActivity);
+                  }
+                  
+                  // 提取子类别
+                  if (details) {
+                    const subcategories = details.split(', ');
+                    subcategories.forEach(subName => {
+                      if (subName.trim()) {
+                        // 检查子类别是否已存在
+                        const existingSub = activitySubcategories.find(sub => sub.activityId === activityIdNum && sub.name === subName.trim());
+                        if (!existingSub) {
+                          const newSubcategory = {
+                            id: Date.now(),
+                            activityId: activityIdNum,
+                            name: subName.trim()
+                          };
+                          activitySubcategories.push(newSubcategory);
+                        }
+                      }
+                    });
+                  }
+                });
+              }
+              
+              // 处理地点
+              if (entry.locations) {
+                entry.locations.forEach(locationId => {
+                  // 检查地点是否已存在
+                  const existingLocation = locations.find(l => l.id === locationId);
+                  if (!existingLocation) {
+                    const newLocation = {
+                      id: locationId,
+                      name: `地点${locationId}`,
+                      color: getRandomColor()
+                    };
+                    locations.push(newLocation);
+                  }
+                });
+              }
+              
+              // 处理食物
+              if (entry.foods) {
+                Object.entries(entry.foods).forEach(([categoryId, foodNames]) => {
+                  const categoryIdNum = parseInt(categoryId);
+                  // 检查食物类别是否已存在
+                  const existingCategory = foodCategories.find(c => c.id === categoryIdNum);
+                  if (!existingCategory) {
+                    const newCategory = {
+                      id: categoryIdNum,
+                      name: `食物类别${categoryIdNum}`,
+                      color: getRandomColor()
+                    };
+                    foodCategories.push(newCategory);
+                  }
+                  
+                  // 提取食物
+                  if (foodNames) {
+                    const foodList = foodNames.split(', ');
+                    foodList.forEach(foodName => {
+                      if (foodName.trim()) {
+                        // 检查食物是否已存在
+                        const existingFood = foods.find(f => f.name === foodName.trim() && f.categoryId === categoryIdNum);
+                        if (!existingFood) {
+                          const newFood = {
+                            id: Date.now(),
+                            name: foodName.trim(),
+                            categoryId: categoryIdNum
+                          };
+                          foods.push(newFood);
+                        }
+                      }
+                    });
+                  }
+                });
+              }
+            });
+            
+            // 保存更新后的数据
+            saveActivities();
+            saveLocations();
+            saveFoodCategories();
+            saveFoods();
+            localStorage.setItem('activitySubcategories', JSON.stringify(activitySubcategories));
+          }
+        }
+        
+        currentLang = settings.language || 'zh';
+        currentTheme = settings.theme || 'light';
+        
+        applyTheme();
+        updateNavigationLabels();
+        renderSettingsTab();
+        showToast(t('import_success'));
+      } else if (fileExtension === 'csv') {
+        // 解析CSV文件
         if (!confirm(t('import_confirm'))) {
           if (e) e.target.value = '';
           return;
         }
         
-        if (data.settings) {
-          settings = data.settings;
-          saveSettings();
-        }
-        if (data.activities) {
-          activities = data.activities;
-          saveActivities();
-        }
-        if (data.locations) {
-          locations = data.locations;
-          saveLocations();
-        }
-        if (data.foodCategories) {
-          foodCategories = data.foodCategories;
-          saveFoodCategories();
-        }
-        if (data.foods) {
-          foods = data.foods;
-          saveFoods();
-        }
-      } else if (data.type === 'records' || data.type === 'full') {
-        if (!confirm(t('import_confirm'))) {
-          if (e) e.target.value = '';
-          return;
-        }
+        const csvText = event.target.result;
+        const importedEntries = parseCSVData(csvText);
         
-        if (data.diaryEntries) {
-          diaryEntries = data.diaryEntries;
+        if (importedEntries.length > 0) {
+          diaryEntries = importedEntries;
           saveDiaryEntries();
-        }
-        if (data.activities) {
-          activities = data.activities;
           saveActivities();
-        }
-        if (data.locations) {
-          locations = data.locations;
           saveLocations();
-        }
-        if (data.foodCategories) {
-          foodCategories = data.foodCategories;
           saveFoodCategories();
-        }
-        if (data.foods) {
-          foods = data.foods;
           saveFoods();
+          localStorage.setItem('activitySubcategories', JSON.stringify(activitySubcategories));
+          
+          currentLang = settings.language || 'zh';
+          currentTheme = settings.theme || 'light';
+          
+          applyTheme();
+          updateNavigationLabels();
+          renderSettingsTab();
+          showToast(t('import_success'));
+        } else {
+          showToast('无法解析CSV文件');
         }
-        if (data.settings) {
-          settings = data.settings;
-          saveSettings();
-        }
+      } else {
+        showToast(t('invalid_file'));
       }
-      
-      currentLang = settings.language || 'zh';
-      currentTheme = settings.theme || 'light';
-      
-      applyTheme();
-      updateNavigationLabels();
-      renderSettingsTab();
-      showToast(t('import_success'));
       
       if (e) e.target.value = '';
     } catch (error) {
+      console.error('导入文件时出错:', error);
       showToast(t('invalid_file'));
       if (e) e.target.value = '';
     }
@@ -2465,17 +3454,464 @@ function importFromFile(file, e) {
 function importFromClipboard() {
   if (navigator.clipboard) {
     navigator.clipboard.readText().then(text => {
+      console.log('剪贴板内容:', text);
       try {
+        // 尝试解析为 JSON 格式
         const data = JSON.parse(text);
         processImportData(data);
       } catch (error) {
-        showToast(t('invalid_file'));
+        console.error('解析 JSON 格式时出错:', error);
+        showToast('无效的数据文件（仅支持JSON格式）');
       }
     }).catch(() => {
       showToast('无法读取剪贴板');
     });
   } else {
     showToast('无法读取剪贴板');
+  }
+}
+
+// 解析 Markdown 格式的日记记录（按照固定导出格式）
+function parseMarkdownRecords(text) {
+  try {
+    const entries = [];
+    const lines = text.trim().split('\n');
+    let currentEntry = null;
+    
+    console.log('开始解析日记记录，共', lines.length, '行');
+    
+    lines.forEach((line, index) => {
+      try {
+        line = line.trim();
+        console.log('第', index + 1, '行:', line);
+        
+        // 匹配记录开始行：数字. 日期 ：
+        const recordMatch = line.match(/^\d+\.\s*(.+?)\s*：$/);
+        if (recordMatch) {
+          console.log('匹配到记录开始行:', recordMatch);
+          // 开始新的记录
+          if (currentEntry) {
+            entries.push(currentEntry);
+            console.log('添加记录:', currentEntry);
+          }
+          
+          // 解析日期
+          const dateStr = recordMatch[1].trim();
+          console.log('解析日期:', dateStr);
+          
+          // 尝试解析日期
+          let date;
+          try {
+            // 处理不同的日期格式
+            if (dateStr.includes('/')) {
+              const parts = dateStr.split('/');
+              const year = parseInt(parts[0]);
+              const month = parseInt(parts[1]) - 1; // 月份从0开始
+              const day = parseInt(parts[2]);
+              date = new Date(year, month, day);
+            } else {
+              date = new Date(dateStr);
+            }
+            console.log('解析结果:', date);
+          } catch (error) {
+            console.error('日期解析错误:', error);
+            date = new Date(); // 使用当前日期作为默认值
+          }
+          
+          currentEntry = {
+            id: Date.now(),
+            date: date.toISOString(),
+            activities: [],
+            locations: [],
+            foods: {},
+            activityDetails: {},
+            mood: 3,
+            notes: ''
+          };
+          console.log('创建新记录:', currentEntry);
+        } else if (currentEntry) {
+          // 匹配活动行
+          if (line.includes('活动：')) {
+            const activityText = line.split('活动：')[1].trim();
+            console.log('匹配到活动行:', activityText);
+            if (activityText !== '无') {
+              const activityNames = activityText.split('、');
+              activityNames.forEach(name => {
+                name = name.trim();
+                if (name) {
+                  let activity = window.activities.find(a => a.name === name);
+                  if (!activity) {
+                    // 创建新活动
+                    activity = {
+                      id: Date.now(),
+                      name: name,
+                      color: getRandomColor()
+                    };
+                    window.activities.push(activity);
+                    console.log('创建新活动:', activity);
+                  }
+                  currentEntry.activities.push(activity.id);
+                }
+              });
+            }
+          }
+          
+          // 匹配地点行
+          else if (line.includes('地点：')) {
+            const locationText = line.split('地点：')[1].trim();
+            console.log('匹配到地点行:', locationText);
+            if (locationText !== '无') {
+              const locationNames = locationText.split('、');
+              locationNames.forEach(name => {
+                name = name.trim();
+                if (name) {
+                  let location = window.locations.find(l => l.name === name);
+                  if (!location) {
+                    // 创建新地点
+                    location = {
+                      id: Date.now(),
+                      name: name,
+                      color: getRandomColor()
+                    };
+                    window.locations.push(location);
+                    console.log('创建新地点:', location);
+                  }
+                  currentEntry.locations.push(location.id);
+                }
+              });
+            }
+          }
+          
+          // 匹配食物行
+          else if (line.includes('食物：')) {
+            const foodText = line.split('食物：')[1].trim();
+            console.log('匹配到食物行:', foodText);
+            if (foodText !== '无') {
+              const foodItems = foodText.split('、');
+              foodItems.forEach(item => {
+                const foodMatch = item.match(/^(.*?)：(.*)$/);
+                if (foodMatch) {
+                  const categoryName = foodMatch[1].trim();
+                  const foodNames = foodMatch[2].split(',').map(f => f.trim());
+                  
+                  let category = window.foodCategories.find(c => c.name === categoryName);
+                  if (!category) {
+                    // 创建新食物类别
+                    category = {
+                      id: Date.now(),
+                      name: categoryName,
+                      color: getRandomColor()
+                    };
+                    window.foodCategories.push(category);
+                    console.log('创建新食物类别:', category);
+                  }
+                  
+                  // 保存食物
+                  currentEntry.foods[category.id] = foodNames.join(', ');
+                  
+                  // 创建食物记录
+                  foodNames.forEach(foodName => {
+                    if (!window.foods.find(f => f.name === foodName && f.categoryId === category.id)) {
+                      const newFood = {
+                        id: Date.now(),
+                        name: foodName,
+                        categoryId: category.id
+                      };
+                      window.foods.push(newFood);
+                      console.log('创建新食物:', newFood);
+                    }
+                  });
+                }
+              });
+            }
+          }
+          
+          // 匹配活动详情行
+          else if (line.includes('活动详情：')) {
+            const detailText = line.split('活动详情：')[1].trim();
+            console.log('匹配到活动详情行:', detailText);
+            if (detailText !== '无') {
+              const detailItems = detailText.split('、');
+              detailItems.forEach(item => {
+                const detailMatch = item.match(/^(.*?)[（(](.*?)[）)]$/);
+                if (detailMatch) {
+                  const activityName = detailMatch[1].trim();
+                  const details = detailMatch[2].trim();
+                  console.log('活动详情:', activityName, details);
+                  
+                  const activity = window.activities.find(a => a.name === activityName);
+                  if (activity) {
+                    currentEntry.activityDetails[activity.id] = details;
+                    
+                    // 提取子类别
+                    if (details && details.trim()) {
+                      const subcategories = details.split(',').map(s => s.trim());
+                      subcategories.forEach(subName => {
+                        if (subName) {
+                          // 检查子类别是否已存在
+                          const existingSub = window.activitySubcategories.find(sub => sub.activityId === activity.id && sub.name === subName);
+                          if (!existingSub) {
+                            const newSubcategory = {
+                              id: Date.now(),
+                              activityId: activity.id,
+                              name: subName
+                            };
+                            window.activitySubcategories.push(newSubcategory);
+                            console.log('创建新活动子类别:', newSubcategory);
+                          }
+                        }
+                      });
+                    }
+                  }
+                }
+              });
+            }
+          }
+          
+          // 匹配心情行
+          else if (line.includes('心情：')) {
+            const moodText = line.split('心情：')[1].trim();
+            console.log('匹配到心情行:', moodText);
+            const moodMatch = moodText.match(/^(\d+)[（(].*[）)]$/);
+            if (moodMatch) {
+              currentEntry.mood = parseInt(moodMatch[1]);
+              console.log('解析心情:', currentEntry.mood);
+            }
+          }
+          
+          // 匹配备注行
+          else if (line.includes('备注：')) {
+            const noteText = line.split('备注：')[1].trim();
+            console.log('匹配到备注行:', noteText);
+            currentEntry.notes = noteText === '无' ? '' : noteText;
+          }
+        }
+      } catch (error) {
+        console.error('处理第', index + 1, '行时出错:', error);
+        // 继续处理下一行
+      }
+    });
+    
+    // 添加最后一条记录
+    if (currentEntry) {
+      entries.push(currentEntry);
+      console.log('添加最后一条记录:', currentEntry);
+    }
+    
+    console.log('解析完成，共解析到', entries.length, '条记录');
+    
+    // 保存更新后的活动、地点、食物等
+    saveActivities();
+    saveLocations();
+    saveFoodCategories();
+    saveFoods();
+    localStorage.setItem('activitySubcategories', JSON.stringify(window.activitySubcategories));
+    
+    return entries;
+  } catch (error) {
+    console.error('解析 Markdown 日记记录时出错:', error);
+    return [];
+  }
+}
+
+// 解析 Markdown 格式的管理数据（按照固定导出格式）
+function parseMarkdownSettings(text) {
+  try {
+    const lines = text.trim().split('\n');
+    let currentSection = null;
+    let inActivityList = false;
+    let inActivitySubcategories = false;
+    let inFoodCategories = false;
+    let inFoodList = false;
+    
+    lines.forEach((line, index) => {
+      try {
+        line = line.trim();
+        
+        // 匹配章节标题
+        if (line.startsWith('### ')) {
+          currentSection = line.substring(4).trim();
+          inActivityList = false;
+          inActivitySubcategories = false;
+          inFoodCategories = false;
+          inFoodList = false;
+        } else if (currentSection) {
+          switch (currentSection) {
+            case '应用设置':
+              // 匹配设置项
+              if (line.startsWith('- 语言 ：')) {
+                const value = line.substring(6).trim();
+                window.settings.language = value === '中文' ? 'zh' : 'en';
+              } else if (line.startsWith('- 主题 ：')) {
+                const value = line.substring(6).trim();
+                window.settings.theme = value === '浅色' ? 'light' : 'dark';
+              }
+              break;
+              
+            case '活动管理':
+              // 匹配活动列表和子类别
+              if (line === '- 活动列表 ：') {
+                inActivityList = true;
+                inActivitySubcategories = false;
+              } else if (line === '- 活动子类别 ：') {
+                inActivityList = false;
+                inActivitySubcategories = true;
+              } else if (inActivityList && line.startsWith('- ')) {
+                // 活动列表项
+                const activityMatch = line.match(/^-\s*(.+?)\s*（颜色：(.+?)）$/);
+                if (activityMatch) {
+                  const activityName = activityMatch[1].trim();
+                  const color = activityMatch[2].trim();
+                  // 检查活动是否已存在
+                  let activity = window.activities.find(a => a.name === activityName);
+                  if (!activity) {
+                    activity = {
+                      id: Date.now(),
+                      name: activityName,
+                      color: color
+                    };
+                    window.activities.push(activity);
+                  } else {
+                    activity.color = color;
+                  }
+                }
+              } else if (inActivitySubcategories && line.startsWith('- ')) {
+                // 活动子类别项
+                const subMatch = line.match(/^-\s*(.+?)：(.+)$/);
+                if (subMatch) {
+                  const activityName = subMatch[1].trim();
+                  const subcategories = subMatch[2].split('、').map(s => s.trim());
+                  // 检查活动是否已存在
+                  let activity = window.activities.find(a => a.name === activityName);
+                  if (!activity) {
+                    activity = {
+                      id: Date.now(),
+                      name: activityName,
+                      color: getRandomColor()
+                    };
+                    window.activities.push(activity);
+                  }
+                  // 添加子类别
+                  subcategories.forEach(subName => {
+                    if (subName) {
+                      const existingSub = window.activitySubcategories.find(sub => sub.activityId === activity.id && sub.name === subName);
+                      if (!existingSub) {
+                        const newSubcategory = {
+                          id: Date.now(),
+                          activityId: activity.id,
+                          name: subName
+                        };
+                        window.activitySubcategories.push(newSubcategory);
+                      }
+                    }
+                  });
+                }
+              }
+              break;
+              
+            case '地点管理':
+              // 匹配地点项
+              if (line.startsWith('- ')) {
+                const locationMatch = line.match(/^-\s*(.+?)\s*（颜色：(.+?)）$/);
+                if (locationMatch) {
+                  const locationName = locationMatch[1].trim();
+                  const color = locationMatch[2].trim();
+                  // 检查地点是否已存在
+                  let location = window.locations.find(l => l.name === locationName);
+                  if (!location) {
+                    location = {
+                      id: Date.now(),
+                      name: locationName,
+                      color: color
+                    };
+                    window.locations.push(location);
+                  } else {
+                    location.color = color;
+                  }
+                }
+              }
+              break;
+              
+            case '食物管理':
+              // 匹配食物类别和食物列表
+              if (line === '- 食物类别 ：') {
+                inFoodCategories = true;
+                inFoodList = false;
+              } else if (line === '- 食物列表 ：') {
+                inFoodCategories = false;
+                inFoodList = true;
+              } else if (inFoodCategories && line.startsWith('- ')) {
+                // 食物类别项
+                const categoryMatch = line.match(/^-\s*(.+?)\s*（颜色：(.+?)）$/);
+                if (categoryMatch) {
+                  const categoryName = categoryMatch[1].trim();
+                  const color = categoryMatch[2].trim();
+                  // 检查食物类别是否已存在
+                  let category = window.foodCategories.find(c => c.name === categoryName);
+                  if (!category) {
+                    category = {
+                      id: Date.now(),
+                      name: categoryName,
+                      color: color
+                    };
+                    window.foodCategories.push(category);
+                  } else {
+                    category.color = color;
+                  }
+                }
+              } else if (inFoodList && line.startsWith('- ')) {
+                // 食物列表项
+                const foodMatch = line.match(/^-\s*(.+?)：(.+)$/);
+                if (foodMatch) {
+                  const categoryName = foodMatch[1].trim();
+                  const foodNames = foodMatch[2].split('、').map(f => f.trim());
+                  // 检查食物类别是否已存在
+                  let category = window.foodCategories.find(c => c.name === categoryName);
+                  if (!category) {
+                    category = {
+                      id: Date.now(),
+                      name: categoryName,
+                      color: getRandomColor()
+                    };
+                    window.foodCategories.push(category);
+                  }
+                  // 添加食物
+                  foodNames.forEach(foodName => {
+                    if (foodName) {
+                      const existingFood = window.foods.find(f => f.name === foodName && f.categoryId === category.id);
+                      if (!existingFood) {
+                        const newFood = {
+                          id: Date.now(),
+                          name: foodName,
+                          categoryId: category.id
+                        };
+                        window.foods.push(newFood);
+                      }
+                    }
+                  });
+                }
+              }
+              break;
+          }
+        }
+      } catch (error) {
+        console.error('处理第', index + 1, '行时出错:', error);
+        // 继续处理下一行
+      }
+    });
+    
+    // 保存更新后的设置、活动、地点、食物等
+    saveSettings();
+    saveActivities();
+    saveLocations();
+    saveFoodCategories();
+    saveFoods();
+    localStorage.setItem('activitySubcategories', JSON.stringify(window.activitySubcategories));
+    
+    return true;
+  } catch (error) {
+    console.error('解析 Markdown 管理数据时出错:', error);
+    return false;
   }
 }
 
@@ -2492,6 +3928,10 @@ function processImportData(data) {
     if (data.activities) {
       activities = data.activities;
       saveActivities();
+    }
+    if (data.activitySubcategories) {
+      activitySubcategories = data.activitySubcategories;
+      localStorage.setItem('activitySubcategories', JSON.stringify(activitySubcategories));
     }
     if (data.locations) {
       locations = data.locations;
@@ -2514,25 +3954,66 @@ function processImportData(data) {
       diaryEntries = data.diaryEntries;
       saveDiaryEntries();
     }
-    if (data.activities) {
-      activities = data.activities;
+    
+    // 提取并添加新的活动和活动子类别
+    if (data.diaryEntries) {
+      data.diaryEntries.forEach(entry => {
+        // 处理活动
+        if (entry.activities) {
+          entry.activities.forEach(activityId => {
+            // 检查活动是否已存在
+            const existingActivity = activities.find(a => a.id === activityId);
+            if (!existingActivity) {
+              const newActivity = {
+                id: activityId,
+                name: `活动${activityId}`,
+                color: getRandomColor()
+              };
+              activities.push(newActivity);
+            }
+          });
+        }
+        
+        // 处理活动细节（子类别）
+        if (entry.activityDetails) {
+          Object.entries(entry.activityDetails).forEach(([activityId, details]) => {
+            const activityIdNum = parseInt(activityId);
+            // 检查活动是否已存在
+            const existingActivity = activities.find(a => a.id === activityIdNum);
+            if (!existingActivity) {
+              const newActivity = {
+                id: activityIdNum,
+                name: `活动${activityIdNum}`,
+                color: getRandomColor()
+              };
+              activities.push(newActivity);
+            }
+            
+            // 提取子类别
+            if (details) {
+              const subcategories = details.split(', ');
+              subcategories.forEach(subName => {
+                if (subName.trim()) {
+                  // 检查子类别是否已存在
+                  const existingSub = activitySubcategories.find(sub => sub.activityId === activityIdNum && sub.name === subName.trim());
+                  if (!existingSub) {
+                    const newSubcategory = {
+                      id: Date.now(),
+                      activityId: activityIdNum,
+                      name: subName.trim()
+                    };
+                    activitySubcategories.push(newSubcategory);
+                  }
+                }
+              });
+            }
+          });
+        }
+      });
+      
+      // 保存更新后的活动和子类别
       saveActivities();
-    }
-    if (data.locations) {
-      locations = data.locations;
-      saveLocations();
-    }
-    if (data.foodCategories) {
-      foodCategories = data.foodCategories;
-      saveFoodCategories();
-    }
-    if (data.foods) {
-      foods = data.foods;
-      saveFoods();
-    }
-    if (data.settings) {
-      settings = data.settings;
-      saveSettings();
+      localStorage.setItem('activitySubcategories', JSON.stringify(activitySubcategories));
     }
   }
   
@@ -2568,9 +4049,38 @@ function addActivity() {
 function deleteActivity(id) {
   if (confirm('确定删除这个活动？')) {
     activities = activities.filter(a => a.id !== id);
+    // 同时删除关联的子类别
+    activitySubcategories = activitySubcategories.filter(sub => sub.activityId !== id);
+    localStorage.setItem('activitySubcategories', JSON.stringify(activitySubcategories));
     saveActivities();
     renderActivitiesManagement();
     showToast('活动已删除');
+  }
+}
+
+// 添加活动子类别
+function addActivitySubcategory(activityId) {
+  const name = prompt('请输入子类别名称');
+  if (name) {
+    const newSubcategory = {
+      id: Date.now(),
+      activityId: activityId,
+      name: name
+    };
+    activitySubcategories.push(newSubcategory);
+    localStorage.setItem('activitySubcategories', JSON.stringify(activitySubcategories));
+    renderActivitiesManagement();
+    showToast('子类别已保存');
+  }
+}
+
+// 删除活动子类别
+function deleteActivitySubcategory(id) {
+  if (confirm('确定删除这个子类别？')) {
+    activitySubcategories = activitySubcategories.filter(sub => sub.id !== id);
+    localStorage.setItem('activitySubcategories', JSON.stringify(activitySubcategories));
+    renderActivitiesManagement();
+    showToast('子类别已删除');
   }
 }
 
@@ -2670,6 +4180,24 @@ function resetSettings() {
     { id: 5, name: '社交', color: '#8b5cf6' }
   ];
   
+  const defaultActivitySubcategories = [
+    { id: 1, activityId: 1, name: '高等数学' },
+    { id: 2, activityId: 1, name: '英语' },
+    { id: 3, activityId: 1, name: '编程' },
+    { id: 4, activityId: 2, name: '会议' },
+    { id: 5, activityId: 2, name: '文档' },
+    { id: 6, activityId: 2, name: '开发' },
+    { id: 7, activityId: 3, name: '电影' },
+    { id: 8, activityId: 3, name: '游戏' },
+    { id: 9, activityId: 3, name: '音乐' },
+    { id: 10, activityId: 4, name: '跑步' },
+    { id: 11, activityId: 4, name: '游泳' },
+    { id: 12, activityId: 4, name: '健身' },
+    { id: 13, activityId: 5, name: '朋友' },
+    { id: 14, activityId: 5, name: '家人' },
+    { id: 15, activityId: 5, name: '同事' }
+  ];
+  
   const defaultLocations = [
     { id: 1, name: '家', color: '#6366f1' },
     { id: 2, name: '办公室', color: '#10b981' },
@@ -2704,6 +4232,7 @@ function resetSettings() {
   
   // 保存默认值到localStorage
   localStorage.setItem('activities', JSON.stringify(defaultActivities));
+  localStorage.setItem('activitySubcategories', JSON.stringify(defaultActivitySubcategories));
   localStorage.setItem('locations', JSON.stringify(defaultLocations));
   localStorage.setItem('foodCategories', JSON.stringify(defaultFoodCategories));
   localStorage.setItem('foods', JSON.stringify(defaultFoods));
@@ -2716,6 +4245,7 @@ function resetSettings() {
   currentTheme = 'light';
   diaryEntries = [];
   activities = defaultActivities;
+  activitySubcategories = defaultActivitySubcategories;
   locations = defaultLocations;
   foodCategories = defaultFoodCategories;
   foods = defaultFoods;
@@ -2763,6 +4293,7 @@ function initApp() {
     currentTheme = storage.theme;
     diaryEntries = storage.diaryEntries;
     activities = storage.activities;
+    activitySubcategories = storage.activitySubcategories;
     locations = storage.locations;
     foodCategories = storage.foodCategories;
     foods = storage.foods;

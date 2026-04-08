@@ -81,7 +81,7 @@ body.dark-theme {
 }
 
 /* 标题样式 */
-h1, h2, h3, h4 {
+h1, h2, h3, h4, p, li, span {
   margin-bottom: var(--spacing-sm);
   color: var(--text-primary);
   transition: var(--transition);
